@@ -6,17 +6,43 @@ import 'package:robomas_debuger/provider.dart';
 //import 'package:usbcan_plugins/frames.dart';
 import 'package:robomas_debuger/change_datatype.dart';
 
-Future<bool> sendRobomasFrame(WidgetRef ref, int limitTemp) async {
-  Uint8List sendData = Uint8List(data.length + 3);
+Future<bool> sendRobomasDisFrame(WidgetRef ref, int limitTemp) async {
+  Uint8List sendData = Uint8List(19);
   sendData[0] = 3 << 4;
   sendData[0] = sendData[0] + intToUint8List(ref.watch(motorId))[0];
   sendData[1] = intToUint8List(ref.watch(motorKind))[0] << 7;
   sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProvider))[0];
   sendData[2] = intToUint8List(limitTemp)[0];
-  sendData.setRange(4, 7, doubleToFloattoUint8list(double.parse(ref.watch(velkptextfieldcontroller).text)));
-  sendData.setRange(8, 11, doubleToFloattoUint8list(double.parse(ref.watch(velkitextfieldcontroller).text)));
-  sendData.setRange(12, 15, doubleToFloattoUint8list(double.parse(ref.watch(velkdtextfieldcontroller).text)));
-  sendData.setRange(16, 19, doubleToFloattoUint8list(double.parse(ref.watch(vellimitIetextfieldcontroller).text)));
+  sendData[3] = intToUint8List(1)[0];
+  return await usbCan.sendUint8List(sendData);
+}
+
+Future<bool> sendRobomasVelFrame(WidgetRef ref, int limitTemp) async {
+  Uint8List sendData = Uint8List(19);
+  sendData[0] = 3 << 4;
+  sendData[0] = sendData[0] + intToUint8List(ref.watch(motorId))[0];
+  sendData[1] = intToUint8List(ref.watch(motorKind))[0] << 7;
+  sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProvider))[0];
+  sendData[2] = intToUint8List(limitTemp)[0];
+  sendData.setRange(3, 7, doubleToFloattoUint8list(double.parse(ref.watch(velkptextfieldcontroller).text)));
+  sendData.setRange(7, 11, doubleToFloattoUint8list(double.parse(ref.watch(velkitextfieldcontroller).text)));
+  sendData.setRange(11, 15, doubleToFloattoUint8list(double.parse(ref.watch(velkdtextfieldcontroller).text)));
+  sendData.setRange(15, 19, doubleToFloattoUint8list(double.parse(ref.watch(vellimitIetextfieldcontroller).text)));
+  //sendData.setRange(3, data.length + 3, data);
+  return await usbCan.sendUint8List(sendData);
+}
+
+Future<bool> sendRobomasPosFrame(WidgetRef ref, int limitTemp) async {
+  Uint8List sendData = Uint8List(19);
+  sendData[0] = 3 << 4;
+  sendData[0] = sendData[0] + intToUint8List(ref.watch(motorId))[0];
+  sendData[1] = intToUint8List(ref.watch(motorKind))[0] << 7;
+  sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProvider))[0];
+  sendData[2] = intToUint8List(limitTemp)[0];
+  sendData.setRange(3, 7, doubleToFloattoUint8list(double.parse(ref.watch(poskptextfieldcontroller).text)));
+  sendData.setRange(7, 11, doubleToFloattoUint8list(double.parse(ref.watch(poskitextfieldcontroller).text)));
+  sendData.setRange(11, 15, doubleToFloattoUint8list(double.parse(ref.watch(poskdtextfieldcontroller).text)));
+  sendData.setRange(15, 19, doubleToFloattoUint8list(double.parse(ref.watch(poslimitIetextfieldcontroller).text)));
   //sendData.setRange(3, data.length + 3, data);
   return await usbCan.sendUint8List(sendData);
 }
@@ -134,9 +160,6 @@ double check(String value){
     return doubleValue;
 }
 
-Uint8List a = Uint8List(1);
-Uint8List data = Uint8List(16);
-
 class FrameSendButton extends ConsumerWidget{
   const FrameSendButton({Key? key}) : super(key: key);
 
@@ -222,7 +245,7 @@ class FrameSendButton extends ConsumerWidget{
       onPressed: () async{
         switch(ref.watch(modeProvider)){
           case 0:
-            if(await sendRobomasFrame(ref, 50)){
+            if(await sendRobomasDisFrame(ref, 50)){
               if(context.mounted){
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("Frame Send"),
@@ -231,7 +254,7 @@ class FrameSendButton extends ConsumerWidget{
             }
             break;
           case 1:
-            if(await sendRobomasFrame(ref, 50)){
+            if(await sendRobomasVelFrame(ref, 50)){
               if(context.mounted){
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text("Frame Send"),
@@ -240,7 +263,7 @@ class FrameSendButton extends ConsumerWidget{
             }
             break;
           case 2:
-            if(await sendRobomasFrame(ref, 50)){
+            if(await sendRobomasPosFrame(ref, 50)){
               if(context.mounted){
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text("Frame Send"),
@@ -268,7 +291,7 @@ class TargetSendButton extends ConsumerWidget{
             content: Text("Target Send"),
           ));
         }
-      };},
+      }},
       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
       child: const Text('SendTarget')
     );
