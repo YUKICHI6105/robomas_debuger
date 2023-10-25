@@ -1,7 +1,10 @@
+//import 'dart:ffi';
+//import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:usbcan_plugins/usbcan.dart';
-import 'package:usbcan_plugins/frames.dart';
+//import 'package:usbcan_plugins/frames.dart';
 
 enum Mode {
   dis,
@@ -12,10 +15,12 @@ enum Mode {
 }
 
 UsbCan usbCan = UsbCan();
-final modeProvider = StateProvider<RobomasterMotorMode>((ref) => RobomasterMotorMode.dis);
+// final modeProvider = StateProvider<RobomasterMotorMode>((ref) => RobomasterMotorMode.dis);
+final modeProvider = StateProvider<int>((ref) => 0);
 final motorId = StateProvider<int>((ref) => 0);
 final diag = StateProvider<String>((ref) => 'off');
-final motorKind = StateProvider<RobomasterMotorType>((ref) => RobomasterMotorType.c620);
+final motorKind = StateProvider<int>((ref) => 1);
+// final motorKind = StateProvider<RobomasterMotorType>((ref) => RobomasterMotorType.c620);
 
 // final velKp = StateProvider<double>((ref) => 0.0);
 // final velKi = StateProvider<double>((ref) => 0.0);

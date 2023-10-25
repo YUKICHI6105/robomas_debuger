@@ -3,8 +3,39 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
-import 'package:usbcan_plugins/frames.dart';
+//import 'package:usbcan_plugins/frames.dart';
+import 'package:robomas_debuger/change_datatype.dart';
 
+Future<bool> sendRobomasFrame(WidgetRef ref, int limitTemp) async {
+  Uint8List sendData = Uint8List(data.length + 3);
+  sendData[0] = 3 << 4;
+  sendData[0] = sendData[0] + intToUint8List(ref.watch(motorId))[0];
+  sendData[1] = intToUint8List(ref.watch(motorKind))[0] << 7;
+  sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProvider))[0];
+  sendData[2] = intToUint8List(limitTemp)[0];
+  sendData.setRange(4, 7, doubleToFloattoUint8list(double.parse(ref.watch(velkptextfieldcontroller).text)));
+  sendData.setRange(8, 11, doubleToFloattoUint8list(double.parse(ref.watch(velkitextfieldcontroller).text)));
+  sendData.setRange(12, 15, doubleToFloattoUint8list(double.parse(ref.watch(velkdtextfieldcontroller).text)));
+  sendData.setRange(16, 19, doubleToFloattoUint8list(double.parse(ref.watch(vellimitIetextfieldcontroller).text)));
+  //sendData.setRange(3, data.length + 3, data);
+  return await usbCan.sendUint8List(sendData);
+}
+
+Future<bool> sendRobomasTarget(int motor, double target) async {
+  Uint8List sendData = Uint8List(5);
+  sendData[0] = 3 << 4;
+  sendData[0] = sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motor)[0];
+  sendData.setRange(1, 5, doubleToFloattoUint8list(target));
+  // Uint8List data = doubleToFloattoUint8list(target);
+  // for(int i = 0; i < 4; i++){
+  //   sendData[i+1] = data[i];
+  // }
+  // sendData[1] = doubleToFloattoUint8list(target)[0];
+  // sendData[2] = doubleToFloattoUint8list(target)[1];
+  // sendData[3] = doubleToFloattoUint8list(target)[2];
+  // sendData[4] = doubleToFloattoUint8list(target)[3];
+  return await usbCan.sendUint8List(sendData);
+}
 
 class BasicTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -46,15 +77,15 @@ class ModeButton extends ConsumerWidget {
       value: ref.watch(modeProvider),
       items: const [
         DropdownMenuItem(
-          value: RobomasterMotorMode.dis,
+          value: 0,
           child: Text('dis')
         ),
         DropdownMenuItem(
-          value: RobomasterMotorMode.vel,
+          value: 1,
           child: Text('vel')
         ),
         DropdownMenuItem(
-          value: RobomasterMotorMode.pos,
+          value: 2,
           child: Text('pos')
         )
       ],
@@ -103,80 +134,122 @@ double check(String value){
     return doubleValue;
 }
 
+Uint8List a = Uint8List(1);
+Uint8List data = Uint8List(16);
+
 class FrameSendButton extends ConsumerWidget{
   const FrameSendButton({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref){
-    final RobomasterSettingFrame robomasterDisSettingFrame = RobomasterSettingFrame(
-      ref.watch(motorKind),
-      ref.watch(modeProvider),
-      ref.watch(motorId),
-      50,
-      1,
-      0,
-      0,
-      0
-    );
-    final RobomasterSettingFrame robomasterVelSettingFrame = RobomasterSettingFrame(
-      ref.watch(motorKind),
-      ref.watch(modeProvider),
-      ref.watch(motorId),
-      50,
-      check(ref.watch(velkptextfieldcontroller).text),
-      check(ref.watch(velkitextfieldcontroller).text),
-      check(ref.watch(velkdtextfieldcontroller).text),
-      check(ref.watch(vellimitIetextfieldcontroller).text)
-    );
-    final RobomasterSettingFrame robomasterPosSettingFrame = RobomasterSettingFrame(
-      ref.watch(motorKind),
-      ref.watch(modeProvider),
-      ref.watch(motorId),
-      50,
-      check(ref.watch(poskptextfieldcontroller).text),
-      check(ref.watch(poskitextfieldcontroller).text),
-      check(ref.watch(poskdtextfieldcontroller).text),
-      check(ref.watch(poslimitIetextfieldcontroller).text)
-    );
-    push(BuildContext context, WidgetRef ref){
-    switch(ref.watch(modeProvider)){
-      case RobomasterMotorMode.dis:
-      () async{
-        if(await usbCan.sendFrame(robomasterDisSettingFrame)){
-          if(context.mounted){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Frame Send"),
-            ));
-          }
-        }
-      };
-        break;
-      case RobomasterMotorMode.vel:
-      () async{
-        if(await usbCan.sendFrame(robomasterVelSettingFrame)){
-          if(context.mounted){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Frame Send"),
-            ));
-          }
-        }
-      };
-        break;
-      case RobomasterMotorMode.pos:
-      () async{
-        if(await usbCan.sendFrame(robomasterPosSettingFrame)){
-          if(context.mounted){
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Frame Send"),
-            ));
-          }
-        }
-      };
-        break;
-    }
-  }
+    // final RobomasterSettingFrame robomasterDisSettingFrame = RobomasterSettingFrame(
+    //   ref.watch(motorKind),
+    //   ref.watch(modeProvider),
+    //   ref.watch(motorId),
+    //   50,
+    //   1,
+    //   0,
+    //   0,
+    //   0
+    // );
+    // final RobomasterSettingFrame robomasterVelSettingFrame = RobomasterSettingFrame(
+    //   ref.watch(motorKind),
+    //   ref.watch(modeProvider),
+    //   ref.watch(motorId),
+    //   50,
+    //   check(ref.watch(velkptextfieldcontroller).text),
+    //   check(ref.watch(velkitextfieldcontroller).text),
+    //   check(ref.watch(velkdtextfieldcontroller).text),
+    //   check(ref.watch(vellimitIetextfieldcontroller).text)
+    // );
+    // final RobomasterSettingFrame robomasterPosSettingFrame = RobomasterSettingFrame(
+    //   ref.watch(motorKind),
+    //   ref.watch(modeProvider),
+    //   ref.watch(motorId),
+    //   50,
+    //   check(ref.watch(poskptextfieldcontroller).text),
+    //   check(ref.watch(poskitextfieldcontroller).text),
+    //   check(ref.watch(poskdtextfieldcontroller).text),
+    //   check(ref.watch(poslimitIetextfieldcontroller).text)
+    // );
+    // push(BuildContext context, WidgetRef ref){
+    //   () async{
+    //     if(await sendRobomasFrame(0, 0, 0, 0, a)){
+    //       // if(context.mounted){
+    //       //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    //       //     content: Text("Frame Send"),
+    //       //   ));
+    //       // }
+    //     }
+    //   };
+    // switch(ref.watch(modeProvider)){
+    //   case 0:
+    //   () async{
+    //     if(await sendRobomasFrame(0, 0, 0, 0, a)){
+    //       // if(context.mounted){
+    //       //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    //       //     content: Text("Frame Send"),
+    //       //   ));
+    //       // }
+    //     }
+    //   };
+    //     break;
+    //   case 1:
+    //   // () async{
+    //   //   if(await sendRobomasFrame(ref.watch(motorId), ref.watch(motorKind), ref.watch(modeProvider), 50, data)){
+    //       if(context.mounted){
+    //         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    //           content: Text("Frame Send"),
+    //         ));
+    //   //     }
+    //   //   }
+    //   };
+    //     break;
+    //   case 2:
+    //   () async{
+    //     if(await sendRobomasFrame(ref.watch(motorId), ref.watch(motorKind), ref.watch(modeProvider), 50, data)){
+    //       if(context.mounted){
+    //         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    //           content: Text("Frame Send"),
+    //         ));
+    //       }
+    //     }
+    //   };
+    //     break;
+    // }
+  // }
     return ElevatedButton(
-      onPressed: () => push(context, ref),
+      onPressed: () async{
+        switch(ref.watch(modeProvider)){
+          case 0:
+            if(await sendRobomasFrame(ref, 50)){
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send"),
+                ));
+              }
+            }
+            break;
+          case 1:
+            if(await sendRobomasFrame(ref, 50)){
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Frame Send"),
+                ));
+              }
+            }
+            break;
+          case 2:
+            if(await sendRobomasFrame(ref, 50)){
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Frame Send"),
+                ));
+              }
+            }
+            break;
+        }
+      },
       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
       child: const Text('SendFrame')
     );
@@ -189,7 +262,13 @@ class TargetSendButton extends ConsumerWidget{
   @override
   Widget build(BuildContext context, WidgetRef ref){
     return ElevatedButton(
-      onPressed: () => usbCan.sendFrame(RobomasterTargetFrame(ref.watch(motorId),double.parse(ref.watch(targetcontroller).text))),
+      onPressed:  () async { if(await sendRobomasTarget(ref.watch(motorId), 3.14)){
+        if(context.mounted){
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("Target Send"),
+          ));
+        }
+      };},
       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
       child: const Text('SendTarget')
     );
