@@ -47,11 +47,11 @@ Future<bool> sendRobomasPosFrame(WidgetRef ref, int limitTemp) async {
   return await usbCan.sendUint8List(sendData);
 }
 
-Future<bool> sendRobomasTarget(int motor, double target) async {
+Future<bool> sendRobomasTarget(WidgetRef ref) async {
   Uint8List sendData = Uint8List(5);
   sendData[0] = 3 << 4;
-  sendData[0] = sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motor)[0];
-  sendData.setRange(1, 5, doubleToFloattoUint8list(target));
+  sendData[0] = sendData[0] + intToUint8List(0x08)[0] + intToUint8List(ref.watch(motorId))[0];
+  sendData.setRange(1, 5, doubleToFloattoUint8list(double.parse(ref.watch(targetcontroller).text)));
   // Uint8List data = doubleToFloattoUint8list(target);
   // for(int i = 0; i < 4; i++){
   //   sendData[i+1] = data[i];
@@ -285,7 +285,7 @@ class TargetSendButton extends ConsumerWidget{
   @override
   Widget build(BuildContext context, WidgetRef ref){
     return ElevatedButton(
-      onPressed:  () async { if(await sendRobomasTarget(ref.watch(motorId), 3.14)){
+      onPressed:  () async { if(await sendRobomasTarget(ref)){
         if(context.mounted){
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
             content: Text("Target Send"),
