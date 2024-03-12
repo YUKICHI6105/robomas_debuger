@@ -87,10 +87,10 @@ class ModeButton extends ConsumerWidget {
           value: 1,
           child: Text('vel')
         ),
-        // DropdownMenuItem(
-        //   value: 2,
-        //   child: Text('pos')
-        // )
+        DropdownMenuItem(
+          value: 2,
+          child: Text('pos')
+        )
       ],
       onChanged: (value) {
         ref.read(modeProviders[number].notifier).state = value!;
