@@ -11,19 +11,19 @@ class RobomasButton extends ConsumerWidget{
   Widget build(BuildContext context, WidgetRef ref){
     return ElevatedButton(
       onPressed: () async {
-            if (!(await usbCan.connectUSB())) {
+            if (!(await usbCan.connectUSB(0x040a))) {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("RobomasController IS NOT CONNECTED"),
                 ));
-                // context.push('/b');
+                // context.push('/RobomasPages');
               }
             } else {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                   content: Text("RobomasController CONNECTED"),
                 ));
-                context.push('/b');
+                context.push('/RobomasPages');
               }
             }
           },
@@ -33,7 +33,7 @@ class RobomasButton extends ConsumerWidget{
   }
 }
 
-class USBCAN2Button extends StatelessWidget{
+class USBCAN2Button extends ConsumerWidget{
   const USBCAN2Button({Key? key}) : super(key: key);
 
   push(BuildContext context){
@@ -41,7 +41,7 @@ class USBCAN2Button extends StatelessWidget{
   }
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context, WidgetRef ref){
     return ElevatedButton(
       onPressed: null,
       style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
@@ -50,16 +50,11 @@ class USBCAN2Button extends StatelessWidget{
   }
 }
 
-class Terminal extends StatefulWidget {
+class Terminal extends ConsumerWidget{
   const Terminal({Key? key}) : super(key: key);
 
   @override
-  State<Terminal> createState() => _TerminalState();
-}
-
-class _TerminalState extends State<Terminal> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref){
     final appBar = AppBar(
       backgroundColor: Colors.blue,
       title: const Text("CRS_Debuger"),

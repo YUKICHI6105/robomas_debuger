@@ -18,16 +18,16 @@ class App extends ConsumerStatefulWidget{
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/a',
+    initialLocation: '/Terminal',
     routes: [
       GoRoute(
-        path: '/a',
+        path: '/Terminal',
         builder: (context, state) => Terminal(key: state.pageKey), 
       ),
       GoRoute(
-        path: '/b',
-        builder: (context, state) => RobomasPage(key: state.pageKey),
-      )
+        path: '/RobomasPages',
+        builder: (context, state) => RobomasPages(key: state.pageKey),
+      ),
     ]
   );
 });

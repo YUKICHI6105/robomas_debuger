@@ -15,30 +15,45 @@ enum Mode {
 }
 
 UsbCan usbCan = UsbCan();
-// final modeProvider = StateProvider<RobomasterMotorMode>((ref) => RobomasterMotorMode.dis);
-final modeProvider = StateProvider<int>((ref) => 0);
-final motorId = StateProvider<int>((ref) => 0);
-final diag = StateProvider<String>((ref) => 'off');
-final motorKind = StateProvider<int>((ref) => 1);
-// final motorKind = StateProvider<RobomasterMotorType>((ref) => RobomasterMotorType.c620);
 
-// final velKp = StateProvider<double>((ref) => 0.0);
-// final velKi = StateProvider<double>((ref) => 0.0);
-// final velKd = StateProvider<double>((ref) => 0.0);
-// final vellimitIe = StateProvider<double>((ref) => 0.0);
-// final posKp = StateProvider<double>((ref) => 0.0);
-// final posKi = StateProvider<double>((ref) => 0.0);
-// final posKd = StateProvider<double>((ref) => 0.0);
-// final poslimitIe = StateProvider<double>((ref) => 0.0);
+final List<StateProvider<int>> modeProviders = List.generate(8, (index) => StateProvider((ref) {return 0;}));
+
+final diag = StateProvider<String>((ref) => 'off');
+
+final List<StateProvider<int>> motorKindProviders = List.generate(8, (index) => StateProvider((ref) {return 1;}));
+
+final indexprovider = StateProvider<int>((ref) => 0);
+
+final List<StateProvider<bool>> isOnProviders = List.generate(8, (index) => StateProvider((ref) {return false;}));
+
 final tyokuVelTarget = StateProvider<double>((ref) => 0);
 final tyokuPosTarget = StateProvider<double>((ref) => 0);
 
-final velkptextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final velkitextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final velkdtextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final vellimitIetextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final poskptextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final poskitextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final poskdtextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final poslimitIetextfieldcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
-final targetcontroller = StateProvider<TextEditingController>((ref) => TextEditingController());
+final List<StateProvider<TextEditingController>> velkptextfieldcontroller = List.generate(
+  8,
+  (index) => StateProvider<TextEditingController>((ref) => TextEditingController(text: '0.15')),
+);
+
+final List<StateProvider<TextEditingController>> velkitextfieldcontroller = List.generate(
+  8,
+  (index) => StateProvider<TextEditingController>((ref) => TextEditingController(text: '9.0')),
+);
+
+final List<StateProvider<TextEditingController>> poskptextfieldcontroller = List.generate(
+  8,
+  (index) => StateProvider<TextEditingController>((ref) => TextEditingController(text: '0.5')),
+);
+
+final List<StateProvider<TextEditingController>> maxtargetcontroller = List.generate(
+  8,
+  (index) => StateProvider<TextEditingController>((ref) => TextEditingController(text: '0.0')),
+);
+
+final List<StateProvider<double>> targetControllers = List.generate(8, (index) => StateProvider((ref) {return 0.0;}));
+
+final List<StateProvider<TextEditingController>> testcontrollers = List.generate(
+  8,
+  (index) => StateProvider<TextEditingController>((ref) => TextEditingController(text: '0.0')),
+);
+
+
