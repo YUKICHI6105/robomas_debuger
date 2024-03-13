@@ -9,8 +9,8 @@ import 'package:robomas_debuger/change_datatype.dart';
 Future<bool> sendRobomasDisFrame(WidgetRef ref, int motorId, int limitTemp) async {
   Uint8List sendData = Uint8List(19);
   sendData[0] = 3 << 4;
-  sendData[0] = sendData[0] + intToUint8List(motorId)[0];
-  sendData[1] = intToUint8List(ref.watch(motorKindProviders[motorId]))[0] << 7;
+  sendData[0] = sendData[0] + intToUint8List(motorId.toUnsigned(8))[0];
+  sendData[1] = intToUint8List(ref.watch(motorKindProviders[motorId]).toUnsigned(8))[0] << 7;
   sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]))[0];
   sendData[2] = intToUint8List(limitTemp)[0];
   sendData[3] = intToUint8List(1)[0];

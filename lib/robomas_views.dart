@@ -246,35 +246,65 @@ class FrameSendButton extends ConsumerWidget{
       onPressed: () async{
         switch(ref.watch(modeProviders[number])){
           case 0:
+          List<int> data = [0,0,0,0,0,0,0,0];
             for(int i=0; i<8; i++){
-              if(await sendRobomasDisFrame(ref, 50, i)){
-                if(context.mounted){
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send"),
-                  ));
-                }
+              if(await sendRobomasDisFrame(ref, i, 50)){
+                data[i] = 1;
+              }
+            }
+            if(data.contains(0)){
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send Error"),
+                ));
+              }
+            }else{
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send"),
+                ));
               }
             }
             break;
           case 1:
+            List<int> data = [0,0,0,0,0,0,0,0];
             for(int i=0; i<8; i++){
-              if(await sendRobomasVelFrame(ref, 50,i)){
-                if(context.mounted){
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send"),
-                  ));
-                }
+              if(await sendRobomasVelFrame(ref, i,50)){
+                data[i] = 1;
+              }
+            }
+            if(data.contains(0)){
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send Error"),
+                ));
+              }
+            }else{
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send"),
+                ));
               }
             }
             break;
           case 2:
+            List<int> data = [0,0,0,0,0,0,0,0];
             for(int i=0; i<8; i++){
-              if(await sendRobomasPosFrame(ref, 50,i)){
-                if(context.mounted){
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send"),
-                  ));
-                }
+              if(await sendRobomasPosFrame(ref, i,50)){
+                data[i] = 1;
+              }
+            }
+            if(data.contains(0)){
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send Error"),
+                ));
+              }
+            }else{
+              if(context.mounted){
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send"),
+                ));
               }
             }
             break;
@@ -293,19 +323,23 @@ class TargetResetButton extends ConsumerWidget{
   Widget build(BuildContext context, WidgetRef ref){
     return ElevatedButton(
       onPressed: () async { 
+        List<int> data = [0,0,0,0,0,0,0,0];
         for(int i=0; i<8; i++){
           if(await sendRobomasTargetReset(ref,i)){
-            if(context.mounted){
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text("Target Reset"),
-              ));
-            }
-          }else{
-            if(context.mounted){
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text("Target Reset Error $i"),
-              ));
-            }
+            data[i] = 1;
+          }
+        }
+        if(data.contains(0)){
+          if(context.mounted){
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Target Reset Error"),
+            ));
+          }
+        }else{
+          if(context.mounted){
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Target Reset"),
+            ));
           }
         }
       },
@@ -327,18 +361,15 @@ class TargetSendButton extends ConsumerWidget{
         ref.read(isOnProviders[number].notifier).state = value;
         switch(ref.read(modeProviders[number])){
           case 0:
-            if(ref.read(isOnProviders[number])){
-              sendRobomasDisFrame(ref, number, 50);
-            }
             break;
           case 1:
             if(ref.read(isOnProviders[number])){
-              sendRobomasVelFrame(ref, number, 50);
+              sendRobomasTarget(ref, number);
             }
             break;
           case 2:
             if(ref.read(isOnProviders[number])){
-              sendRobomasPosFrame(ref, number, 50);
+              sendRobomasTarget(ref, number);
             }
             break;
         }
@@ -392,7 +423,9 @@ class TargetSlider extends ConsumerWidget {
           value: ref.watch(targetControllers[number]),
           onChanged: (value) {
             ref.read(targetControllers[number].notifier).state = value;
-            sendRobomasVelFrame(ref, number, 50);
+            if(ref.read(isOnProviders[number])){
+              sendRobomasTarget(ref, number);
+            }
           },
           min: -942,
           max: 942,
@@ -404,7 +437,9 @@ class TargetSlider extends ConsumerWidget {
           value: ref.watch(targetControllers[number]),
           onChanged: (value) {
             ref.read(targetControllers[number].notifier).state = value;
-            sendRobomasVelFrame(ref, number, 50);
+            if(ref.read(isOnProviders[number])){
+              sendRobomasTarget(ref, number);
+            }
           },
           min: -1885,
           max: 1885,
@@ -427,7 +462,7 @@ class TargetSlider extends ConsumerWidget {
               ref.read(targetControllers[number].notifier).state = 0.0;
             }else{
               ref.read(targetControllers[number].notifier).state = value;
-              sendRobomasPosFrame(ref, number, 50);
+              sendRobomasTarget(ref, number);
             }
           },
           min: -1*double.parse(ref.watch(maxtargetcontroller[number]).text),
