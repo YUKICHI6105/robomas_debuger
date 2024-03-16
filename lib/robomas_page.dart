@@ -1,14 +1,12 @@
 // import 'package:flutter/services.dart';
 //import 'package:usbcan_plugins/usbcan.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:robomas_debuger/provider.dart';
 //import 'package:usbcan_plugins/frames.dart';
 // import 'package:robomas_debuger/change_datatype.dart';
 import 'package:robomas_debuger/robomas_views.dart';
 // import 'package:usbcan_plugins/frames.dart';
 
-class RobomasControlPage extends ConsumerWidget {
+class RobomasControlPage extends StatelessWidget {
   const RobomasControlPage({
     Key? key,
     /*required this.number*/
@@ -16,83 +14,31 @@ class RobomasControlPage extends ConsumerWidget {
   // final int number;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
-        children: const [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              FrameSendButton(
-                number: 1,
-              ),
-              TargetResetButton(),
-            ],
-          ),
-          TargetWidget(number: 1),
-          TargetWidget(number: 2),
-          TargetWidget(number: 3),
-          TargetWidget(number: 4),
-          TargetWidget(number: 5),
-          TargetWidget(number: 6),
-          TargetWidget(number: 7),
-          TargetWidget(number: 8),
-        ],
+        children: const <Widget>[
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FrameSendButton(
+                    number: 1,
+                  ),
+                  TargetResetButton(),
+                ],
+              )
+            ] +
+            [for (var i = 0; i < 8; i++) TargetWidget(number: i + 1)],
       ),
     );
   }
-
-  // @override
-  // Widget build(BuildContext context, WidgetRef ref){
-  //   return const Scaffold(
-  //     body:  Center(
-  //       child: Column(
-  //         mainAxisAlignment: MainAxisAlignment.start,
-  //         //mainAxisSize: MainAxisSize.min,
-  //         crossAxisAlignment: CrossAxisAlignment.center,
-  //         children: [
-  //           PIDTextField(),
-  //           Row(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               Text('Mode:'),
-  //               ModeButton(),
-  //               FrameSendButton(),
-  //             ],
-  //           ),
-  //           Row(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               TargetTextField(),
-  //               TargetSendButton(),
-  //             ],
-  //           ),
-  //           Row(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               // DebugTextField(),
-  //               DiagButton()
-  //             ],
-  //           ),
-  //           Row(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               // DebugTextField(),
-  //               TargetSlider()
-  //             ],
-  //           ),
-  //         ]
-  //       )
-  //     )
-  //   );
-  // }
 }
 
-class RobomasSettingPage extends ConsumerWidget {
+class RobomasSettingPage extends StatelessWidget {
   const RobomasSettingPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
         itemCount: 8, // PIDTextField の数をカウント
