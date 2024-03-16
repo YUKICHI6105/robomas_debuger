@@ -57,9 +57,9 @@ class MoterKindButton extends ConsumerWidget {
       onChanged: (value) {
         ref.read(motorKindProviders[number].notifier).state = value!;
         if (ref.read(motorKindProviders[number].notifier).state == 1) {
-          if (ref.read(targetControllers[number].notifier).state > 942 ||
-              ref.read(targetControllers[number].notifier).state < -942) {
-            ref.read(targetControllers[number].notifier).state = 0.0;
+          if (ref.read(targetProviders[number].notifier).state > 942 ||
+              ref.read(targetProviders[number].notifier).state < -942) {
+            ref.read(targetProviders[number].notifier).state = 0.0;
           }
         }
       },
@@ -330,14 +330,14 @@ class TargetSlider extends ConsumerWidget {
         return const Text('dis mode');
       case Mode.vel:
         if (ref.read(motorKindProviders[number].notifier).state == 1) {
-          if (ref.read(targetControllers[number].notifier).state > 942 ||
-              ref.read(targetControllers[number].notifier).state < -942) {
-            ref.read(targetControllers[number].notifier).state = 0.0;
+          if (ref.read(targetProviders[number].notifier).state > 942 ||
+              ref.read(targetProviders[number].notifier).state < -942) {
+            ref.read(targetProviders[number].notifier).state = 0.0;
           }
           return Slider(
-            value: ref.watch(targetControllers[number]),
+            value: ref.watch(targetProviders[number]),
             onChanged: (value) {
-              ref.read(targetControllers[number].notifier).state = value;
+              ref.read(targetProviders[number].notifier).state = value;
               if (ref.read(isOnProviders[number])) {
                 sendRobomasTarget(ref, number);
               }
@@ -345,13 +345,13 @@ class TargetSlider extends ConsumerWidget {
             min: -942,
             max: 942,
             divisions: 0x8000,
-            label: ref.watch(targetControllers[number]).toString(),
+            label: ref.watch(targetProviders[number]).toString(),
           );
         } else {
           return Slider(
-            value: ref.watch(targetControllers[number]),
+            value: ref.watch(targetProviders[number]),
             onChanged: (value) {
-              ref.read(targetControllers[number].notifier).state = value;
+              ref.read(targetProviders[number].notifier).state = value;
               if (ref.read(isOnProviders[number])) {
                 sendRobomasTarget(ref, number);
               }
@@ -359,23 +359,23 @@ class TargetSlider extends ConsumerWidget {
             min: -1885,
             max: 1885,
             divisions: 0x8000,
-            label: ref.watch(targetControllers[number]).toString(),
+            label: ref.watch(targetProviders[number]).toString(),
           );
         }
       case Mode.pos:
         // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
-        if (ref.read(targetControllers[number].notifier).state >
+        if (ref.read(targetProviders[number].notifier).state >
                 double.parse(ref.watch(maxtargetcontroller[number]).text) ||
-            ref.read(targetControllers[number].notifier).state <
+            ref.read(targetProviders[number].notifier).state <
                 -1 *
                     double.parse(ref.watch(maxtargetcontroller[number]).text)) {
-          ref.read(targetControllers[number].notifier).state = 0.0;
+          ref.read(targetProviders[number].notifier).state = 0.0;
         }
         if (double.parse(ref.watch(maxtargetcontroller[number]).text) == 0.0) {
           ref.read(maxtargetcontroller[number]).text = '0.1';
         }
         return Slider(
-          value: ref.watch(targetControllers[number]),
+          value: ref.watch(targetProviders[number]),
           onChanged: (value) {
             if (value >
                     double.parse(ref.watch(maxtargetcontroller[number]).text) ||
@@ -383,16 +383,16 @@ class TargetSlider extends ConsumerWidget {
                     -1 *
                         double.parse(
                             ref.watch(maxtargetcontroller[number]).text)) {
-              ref.read(targetControllers[number].notifier).state = 0.0;
+              ref.read(targetProviders[number].notifier).state = 0.0;
             } else {
-              ref.read(targetControllers[number].notifier).state = value;
+              ref.read(targetProviders[number].notifier).state = value;
               sendRobomasTarget(ref, number);
             }
           },
           min: -1 * double.parse(ref.watch(maxtargetcontroller[number]).text),
           max: double.parse(ref.watch(maxtargetcontroller[number]).text),
           divisions: 0x8000,
-          label: ref.watch(targetControllers[number]).toString(),
+          label: ref.watch(targetProviders[number]).toString(),
         );
       default:
         return const Text('error');
@@ -454,13 +454,13 @@ class DiagDropdownButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(diag).toString(),
+      value: ref.watch(diagProvider),
       items: const [
         DropdownMenuItem(value: 'off', child: Text('off')),
         DropdownMenuItem(value: 'on', child: Text('on')),
       ],
       onChanged: (value) {
-        ref.read(diag.notifier).state = value.toString();
+        ref.read(diagProvider.notifier).state = value ?? "";
       },
     );
   }

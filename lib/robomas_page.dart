@@ -105,28 +105,36 @@ class RobomasSettingPage extends ConsumerWidget {
   }
 }
 
-class RobomasPages extends ConsumerWidget {
-  const RobomasPages({Key? key}) : super(key: key);
+class RobomasPages extends StatefulWidget {
+  const RobomasPages({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<RobomasPages> createState() => _RobomasPagesState();
+}
+
+class _RobomasPagesState extends State<RobomasPages> {
+  int _selectedIndex = 0;
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
         title: const Text("Robomas_Debuger"),
       ),
-      body: [
-        const RobomasControlPage(),
-        const RobomasSettingPage(),
-      ][ref.watch(indexprovider)],
+      body: const [
+        RobomasControlPage(),
+        RobomasSettingPage(),
+      ][_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting'),
         ],
-        currentIndex: ref.watch(indexprovider),
+        currentIndex: _selectedIndex,
         onTap: (value) {
-          ref.read(indexprovider.notifier).state = value;
+          setState(() {
+            _selectedIndex = value;
+          });
         },
       ),
     );

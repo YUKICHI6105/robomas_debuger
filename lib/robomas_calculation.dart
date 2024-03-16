@@ -78,7 +78,7 @@ Future<bool> sendRobomasTarget(WidgetRef ref, int motorId) async {
       1,
       5,
       doubleToFloattoUint8list(
-          ref.watch(targetControllers[motorId].notifier).state));
+          ref.watch(targetProviders[motorId].notifier).state));
   return await usbCan.sendUint8List(sendData);
 }
 
@@ -88,12 +88,12 @@ Future<bool> sendRobomasTargetReset(WidgetRef ref, int motorId) async {
   sendData[0] =
       sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motorId)[0];
   ref.read(maxtargetcontroller[motorId]).text = '0.0';
-  ref.read(targetControllers[motorId].notifier).state = 0.0;
+  ref.read(targetProviders[motorId].notifier).state = 0.0;
   sendData.setRange(
       1,
       5,
       doubleToFloattoUint8list(
-          ref.watch(targetControllers[motorId].notifier).state));
+          ref.watch(targetProviders[motorId].notifier).state));
   return await usbCan.sendUint8List(sendData);
 }
 

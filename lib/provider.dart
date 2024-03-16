@@ -22,7 +22,14 @@ final List<StateProvider<Mode>> modeProviders = List.generate(
           return Mode.dis;
         }));
 
-final diag = StateProvider<String>((ref) => 'off');
+final List<StateProvider<double>> targetProviders = List.generate(
+    8,
+    (index) => StateProvider((ref) {
+          return 0.0;
+        }));
+
+// now is not used. It is only called from [DiagDropdownButton]
+final diagProvider = StateProvider<String>((ref) => 'off');
 
 final List<StateProvider<int>> motorKindProviders = List.generate(
     8,
@@ -30,16 +37,11 @@ final List<StateProvider<int>> motorKindProviders = List.generate(
           return 1;
         }));
 
-final indexprovider = StateProvider<int>((ref) => 0);
-
 final List<StateProvider<bool>> isOnProviders = List.generate(
     8,
     (index) => StateProvider((ref) {
           return false;
         }));
-
-final tyokuVelTarget = StateProvider<double>((ref) => 0);
-final tyokuPosTarget = StateProvider<double>((ref) => 0);
 
 final List<StateProvider<TextEditingController>> velkptextfieldcontroller =
     List.generate(
@@ -63,19 +65,6 @@ final List<StateProvider<TextEditingController>> poskptextfieldcontroller =
 );
 
 final List<StateProvider<TextEditingController>> maxtargetcontroller =
-    List.generate(
-  8,
-  (index) => StateProvider<TextEditingController>(
-      (ref) => TextEditingController(text: '0.0')),
-);
-
-final List<StateProvider<double>> targetControllers = List.generate(
-    8,
-    (index) => StateProvider((ref) {
-          return 0.0;
-        }));
-
-final List<StateProvider<TextEditingController>> testcontrollers =
     List.generate(
   8,
   (index) => StateProvider<TextEditingController>(
