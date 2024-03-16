@@ -77,12 +77,12 @@ class ModeButton extends ConsumerWidget {
       onTap: () => debugPrint(context.toString()),
       value: ref.watch(modeProviders[number]),
       items: const [
-        DropdownMenuItem(value: 0, child: Text('dis')),
-        DropdownMenuItem(value: 1, child: Text('vel')),
-        DropdownMenuItem(value: 2, child: Text('pos'))
+        DropdownMenuItem(value: Mode.dis, child: Text('dis')),
+        DropdownMenuItem(value: Mode.vel, child: Text('vel')),
+        DropdownMenuItem(value: Mode.pos, child: Text('pos'))
       ],
       onChanged: (value) {
-        ref.read(modeProviders[number].notifier).state = value!;
+        ref.read(modeProviders[number].notifier).state = value ?? Mode.dis;
       },
     );
   }
@@ -158,7 +158,7 @@ class FrameSendButton extends ConsumerWidget {
     return ElevatedButton(
         onPressed: () async {
           switch (ref.watch(modeProviders[number])) {
-            case 0:
+            case Mode.dis:
               List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
               for (int i = 0; i < 8; i++) {
                 if (await sendRobomasDisFrame(ref, i, 50)) {
@@ -179,7 +179,7 @@ class FrameSendButton extends ConsumerWidget {
                 }
               }
               break;
-            case 1:
+            case Mode.vel:
               List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
               for (int i = 0; i < 8; i++) {
                 if (await sendRobomasVelFrame(ref, i, 50)) {
@@ -200,7 +200,7 @@ class FrameSendButton extends ConsumerWidget {
                 }
               }
               break;
-            case 2:
+            case Mode.pos:
               List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
               for (int i = 0; i < 8; i++) {
                 if (await sendRobomasPosFrame(ref, i, 50)) {
@@ -220,6 +220,9 @@ class FrameSendButton extends ConsumerWidget {
                   ));
                 }
               }
+              break;
+            default:
+              // TODO: Handle this case.
               break;
           }
         },
@@ -271,17 +274,20 @@ class TargetSendButton extends ConsumerWidget {
         onChanged: (value) {
           ref.read(isOnProviders[number].notifier).state = value;
           switch (ref.read(modeProviders[number])) {
-            case 0:
+            case Mode.dis:
               break;
-            case 1:
+            case Mode.vel:
               if (ref.read(isOnProviders[number])) {
                 sendRobomasTarget(ref, number);
               }
               break;
-            case 2:
+            case Mode.pos:
               if (ref.read(isOnProviders[number])) {
                 sendRobomasTarget(ref, number);
               }
+              break;
+            default:
+              //TODO: handle this case
               break;
           }
         });
@@ -320,9 +326,9 @@ class TargetSlider extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     switch (ref.watch(modeProviders[number])) {
-      case 0:
+      case Mode.dis:
         return const Text('dis mode');
-      case 1:
+      case Mode.vel:
         if (ref.read(motorKindProviders[number].notifier).state == 1) {
           if (ref.read(targetControllers[number].notifier).state > 942 ||
               ref.read(targetControllers[number].notifier).state < -942) {
@@ -356,7 +362,7 @@ class TargetSlider extends ConsumerWidget {
             label: ref.watch(targetControllers[number]).toString(),
           );
         }
-      case 2:
+      case Mode.pos:
         // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
         if (ref.read(targetControllers[number].notifier).state >
                 double.parse(ref.watch(maxtargetcontroller[number]).text) ||
@@ -388,9 +394,6 @@ class TargetSlider extends ConsumerWidget {
           divisions: 0x8000,
           label: ref.watch(targetControllers[number]).toString(),
         );
-      // }else{
-      //   return const Text('error');
-      // }
       default:
         return const Text('error');
     }
@@ -404,7 +407,7 @@ class TargetWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     switch (ref.watch(modeProviders[number - 1])) {
-      case 0:
+      case Mode.dis:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -413,7 +416,7 @@ class TargetWidget extends ConsumerWidget {
             TargetSlider(number: number - 1),
           ],
         );
-      case 1:
+      case Mode.vel:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -425,7 +428,7 @@ class TargetWidget extends ConsumerWidget {
             TargetSlider(number: number - 1),
           ],
         );
-      case 2:
+      case Mode.pos:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,

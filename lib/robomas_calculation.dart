@@ -1,45 +1,70 @@
 import 'package:flutter/services.dart';
-//import 'package:usbcan_plugins/usbcan.dart';
-// import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
-//import 'package:usbcan_plugins/frames.dart';
 import 'package:robomas_debuger/change_datatype.dart';
 
-Future<bool> sendRobomasDisFrame(WidgetRef ref, int motorId, int limitTemp) async {
+Future<bool> sendRobomasDisFrame(
+    WidgetRef ref, int motorId, int limitTemp) async {
   Uint8List sendData = Uint8List(19);
   sendData[0] = 3 << 4;
   sendData[0] = sendData[0] + intToUint8List(motorId.toUnsigned(8))[0];
-  sendData[1] = intToUint8List(ref.watch(motorKindProviders[motorId]).toUnsigned(8))[0] << 7;
-  sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]))[0];
+  sendData[1] =
+      intToUint8List(ref.watch(motorKindProviders[motorId]).toUnsigned(8))[0] <<
+          7;
+  sendData[1] =
+      sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]).index)[0];
   sendData[2] = intToUint8List(limitTemp)[0];
   sendData[3] = intToUint8List(1)[0];
   return await usbCan.sendUint8List(sendData);
 }
 
-Future<bool> sendRobomasVelFrame(WidgetRef ref, int motorId, int limitTemp) async {
+Future<bool> sendRobomasVelFrame(
+    WidgetRef ref, int motorId, int limitTemp) async {
   Uint8List sendData = Uint8List(19);
   sendData[0] = 3 << 4;
   sendData[0] = sendData[0] + intToUint8List(motorId)[0];
   sendData[1] = intToUint8List(ref.watch(motorKindProviders[motorId]))[0] << 7;
-  sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]))[0];
+  sendData[1] =
+      sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]).index)[0];
   sendData[2] = intToUint8List(limitTemp)[0];
-  sendData.setRange(3, 7, doubleToFloattoUint8list(double.parse(ref.watch(velkptextfieldcontroller[motorId]).text)));
-  sendData.setRange(7, 11, doubleToFloattoUint8list(double.parse(ref.watch(velkitextfieldcontroller[motorId]).text)));
+  sendData.setRange(
+      3,
+      7,
+      doubleToFloattoUint8list(
+          double.parse(ref.watch(velkptextfieldcontroller[motorId]).text)));
+  sendData.setRange(
+      7,
+      11,
+      doubleToFloattoUint8list(
+          double.parse(ref.watch(velkitextfieldcontroller[motorId]).text)));
   //sendData.setRange(3, data.length + 3, data);
   return await usbCan.sendUint8List(sendData);
 }
 
-Future<bool> sendRobomasPosFrame(WidgetRef ref, int motorId, int limitTemp) async {
+Future<bool> sendRobomasPosFrame(
+    WidgetRef ref, int motorId, int limitTemp) async {
   Uint8List sendData = Uint8List(19);
   sendData[0] = 3 << 4;
   sendData[0] = sendData[0] + intToUint8List(motorId)[0];
   sendData[1] = intToUint8List(ref.watch(motorKindProviders[motorId]))[0] << 7;
-  sendData[1] = sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]))[0];
+  sendData[1] =
+      sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]).index)[0];
   sendData[2] = intToUint8List(limitTemp)[0];
-  sendData.setRange(3, 7, doubleToFloattoUint8list(double.parse(ref.watch(velkptextfieldcontroller[motorId]).text)));
-  sendData.setRange(7, 11, doubleToFloattoUint8list(double.parse(ref.watch(velkitextfieldcontroller[motorId]).text)));
-  sendData.setRange(12, 15, doubleToFloattoUint8list(double.parse(ref.watch(poskptextfieldcontroller[motorId]).text)));
+  sendData.setRange(
+      3,
+      7,
+      doubleToFloattoUint8list(
+          double.parse(ref.watch(velkptextfieldcontroller[motorId]).text)));
+  sendData.setRange(
+      7,
+      11,
+      doubleToFloattoUint8list(
+          double.parse(ref.watch(velkitextfieldcontroller[motorId]).text)));
+  sendData.setRange(
+      12,
+      15,
+      doubleToFloattoUint8list(
+          double.parse(ref.watch(poskptextfieldcontroller[motorId]).text)));
   //sendData.setRange(3, data.length + 3, data);
   return await usbCan.sendUint8List(sendData);
 }
@@ -47,30 +72,32 @@ Future<bool> sendRobomasPosFrame(WidgetRef ref, int motorId, int limitTemp) asyn
 Future<bool> sendRobomasTarget(WidgetRef ref, int motorId) async {
   Uint8List sendData = Uint8List(5);
   sendData[0] = 3 << 4;
-  sendData[0] = sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motorId)[0];
-  sendData.setRange(1, 5, doubleToFloattoUint8list(ref.watch(targetControllers[motorId].notifier).state));
-  // Uint8List data = doubleToFloattoUint8list(target);
-  // for(int i = 0; i < 4; i++){
-  //   sendData[i+1] = data[i];
-  // }
-  // sendData[1] = doubleToFloattoUint8list(target)[0];
-  // sendData[2] = doubleToFloattoUint8list(target)[1];
-  // sendData[3] = doubleToFloattoUint8list(target)[2];
-  // sendData[4] = doubleToFloattoUint8list(target)[3];
+  sendData[0] =
+      sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motorId)[0];
+  sendData.setRange(
+      1,
+      5,
+      doubleToFloattoUint8list(
+          ref.watch(targetControllers[motorId].notifier).state));
   return await usbCan.sendUint8List(sendData);
 }
 
-Future<bool> sendRobomasTargetReset(WidgetRef ref,int motorId) async {
+Future<bool> sendRobomasTargetReset(WidgetRef ref, int motorId) async {
   Uint8List sendData = Uint8List(5);
   sendData[0] = 3 << 4;
-  sendData[0] = sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motorId)[0];
+  sendData[0] =
+      sendData[0] + intToUint8List(0x08)[0] + intToUint8List(motorId)[0];
   ref.read(maxtargetcontroller[motorId]).text = '0.0';
   ref.read(targetControllers[motorId].notifier).state = 0.0;
-  sendData.setRange(1, 5, doubleToFloattoUint8list(ref.watch(targetControllers[motorId].notifier).state));
+  sendData.setRange(
+      1,
+      5,
+      doubleToFloattoUint8list(
+          ref.watch(targetControllers[motorId].notifier).state));
   return await usbCan.sendUint8List(sendData);
 }
 
-double check(String value){
+double check(String value) {
   double doubleValue = 0.0;
   try {
     doubleValue = double.parse(value);
@@ -79,6 +106,5 @@ double check(String value){
     doubleValue = 0.0;
     // パースに失敗した場合のエラーハンドリング
   }
-    return doubleValue;
+  return doubleValue;
 }
-
