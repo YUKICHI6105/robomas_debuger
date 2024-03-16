@@ -1,4 +1,3 @@
-
 // import 'package:flutter/services.dart';
 //import 'package:usbcan_plugins/usbcan.dart';
 import 'package:flutter/material.dart';
@@ -9,19 +8,24 @@ import 'package:robomas_debuger/provider.dart';
 import 'package:robomas_debuger/robomas_views.dart';
 // import 'package:usbcan_plugins/frames.dart';
 
-class RobomasControllCenter extends ConsumerWidget {
-  const RobomasControllCenter({Key? key, /*required this.number*/}) : super(key: key);
+class RobomasControlPage extends ConsumerWidget {
+  const RobomasControlPage({
+    Key? key,
+    /*required this.number*/
+  }) : super(key: key);
   // final int number;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref){
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: ListView(
         children: const [
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              FrameSendButton(number: 1,),
+              FrameSendButton(
+                number: 1,
+              ),
               TargetResetButton(),
             ],
           ),
@@ -84,8 +88,8 @@ class RobomasControllCenter extends ConsumerWidget {
   // }
 }
 
-class RobomasSetting extends ConsumerWidget {
-  const RobomasSetting({Key? key}) : super(key: key);
+class RobomasSettingPage extends ConsumerWidget {
+  const RobomasSettingPage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -93,7 +97,8 @@ class RobomasSetting extends ConsumerWidget {
       body: ListView.builder(
         itemCount: 8, // PIDTextField の数をカウント
         itemBuilder: (context, index) {
-          return PIDTextField(number: index + 1); // 生成した番号を引数にして PIDTextField を生成
+          return PIDTextField(
+              number: index + 1); // 生成した番号を引数にして PIDTextField を生成
         },
       ),
     );
@@ -104,26 +109,20 @@ class RobomasPages extends ConsumerWidget {
   const RobomasPages({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref){
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue,
         title: const Text("Robomas_Debuger"),
       ),
       body: [
-        const RobomasControllCenter(),
-        const RobomasSetting(),
+        const RobomasControlPage(),
+        const RobomasSettingPage(),
       ][ref.watch(indexprovider)],
       bottomNavigationBar: BottomNavigationBar(
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home'
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: 'Setting'
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Setting'),
         ],
         currentIndex: ref.watch(indexprovider),
         onTap: (value) {
