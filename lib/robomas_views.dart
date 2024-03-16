@@ -456,7 +456,7 @@ class TargetSlider extends ConsumerWidget {
           ref.read(maxtargetcontroller[number]).text = '0.1';
         }
         return Slider(
-          value: ref.watch(targetControllers[number-1]),
+          value: ref.watch(targetControllers[number]),
           onChanged: (value) {
             if(value > double.parse(ref.watch(maxtargetcontroller[number]).text) || value < -1*double.parse(ref.watch(maxtargetcontroller[number]).text)){
               ref.read(targetControllers[number].notifier).state = 0.0;
