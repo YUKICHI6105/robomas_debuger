@@ -16,7 +16,7 @@ class BasicTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final con = Container(
-      width: 60,
+      width: 73,
       height: 40,
       margin: const EdgeInsets.fromLTRB(10,10,10,10),
       child: TextField(
@@ -94,6 +94,11 @@ class ModeButton extends ConsumerWidget {
       ],
       onChanged: (value) {
         ref.read(modeProviders[number].notifier).state = value!;
+        if(ref.read(modeProviders[number].notifier).state == 1){
+          if(ref.read(targetControllers[number].notifier).state > 942 || ref.read(targetControllers[number].notifier).state < -942){
+            ref.read(targetControllers[number].notifier).state = 0.0;
+          }
+        }
       },
     );
   }
@@ -415,6 +420,9 @@ class TargetSlider extends ConsumerWidget {
       case 0:
         return const Text('dis mode');
       case 1:
+      if(ref.read(targetControllers[number].notifier).state > 1885 || ref.read(targetControllers[number].notifier).state < -1885){
+        ref.read(targetControllers[number].notifier).state = 0.0;
+      }
       if(ref.read(motorKindProviders[number].notifier).state == 1){
         if(ref.read(targetControllers[number].notifier).state > 942 || ref.read(targetControllers[number].notifier).state < -942){
           ref.read(targetControllers[number].notifier).state = 0.0;
