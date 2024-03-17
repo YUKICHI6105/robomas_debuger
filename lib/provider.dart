@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'usbcan.dart';
+import 'package:usbcan_plugins/usbcan.dart';
 
 enum Mode {
   dis,
