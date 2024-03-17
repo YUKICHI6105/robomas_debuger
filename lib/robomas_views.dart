@@ -128,74 +128,41 @@ class FrameSendButton extends ConsumerWidget {
   const FrameSendButton({Key? key, required this.motorIndex}) : super(key: key);
   final int motorIndex;
 
+  final limitTemp = 50;
+
+  Future<void> _sendFrame(
+      BuildContext context,
+      WidgetRef ref,
+      Future<bool> Function(WidgetRef ref, int motorId, int limitTemp)
+          sendRobomasFrame) async {
+    List<bool> data = await Future.wait(List.generate(
+        8, (index) => sendRobomasDisFrame(ref, index, limitTemp)));
+    bool allTrue = data.every((element) => element);
+    if (!context.mounted) return;
+    if (!allTrue) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Frame Send Error"),
+      ));
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Frame Send"),
+    ));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
         onPressed: () async {
           switch (ref.watch(modeProviders[motorIndex])) {
             case Mode.dis:
-              List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
-              for (int i = 0; i < 8; i++) {
-                if (await sendRobomasDisFrame(ref, i, 50)) {
-                  data[i] = 1;
-                }
-              }
-              if (data.contains(0)) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send Error"),
-                  ));
-                }
-                return;
-              }
-              if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send"),
-                ));
-              }
-
+              await _sendFrame(context, ref, sendRobomasDisFrame);
               break;
             case Mode.vel:
-              List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
-              for (int i = 0; i < 8; i++) {
-                if (await sendRobomasVelFrame(ref, i, 50)) {
-                  data[i] = 1;
-                }
-              }
-              if (data.contains(0)) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send Error"),
-                  ));
-                }
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send"),
-                  ));
-                }
-              }
+              await _sendFrame(context, ref, sendRobomasVelFrame);
               break;
             case Mode.pos:
-              List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
-              for (int i = 0; i < 8; i++) {
-                if (await sendRobomasPosFrame(ref, i, 50)) {
-                  data[i] = 1;
-                }
-              }
-              if (data.contains(0)) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send Error"),
-                  ));
-                }
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send"),
-                  ));
-                }
-              }
+              await _sendFrame(context, ref, sendRobomasPosFrame);
               break;
             default:
               // TODO: Handle this case.
@@ -214,24 +181,18 @@ class TargetResetButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
         onPressed: () async {
-          List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
-          for (int i = 0; i < 8; i++) {
-            if (await sendRobomasTargetReset(ref, i)) {
-              data[i] = 1;
-            }
-          }
-          if (data.contains(0)) {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text("Target Reset Error"),
-              ));
-            }
+          List<bool> data = await Future.wait(
+              List.generate(8, (index) => sendRobomasTargetReset(ref, index)));
+          bool allTrue = data.every((element) => element);
+          if (!context.mounted) return;
+          if (allTrue) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Target Reset Error"),
+            ));
           } else {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text("Target Reset"),
-              ));
-            }
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text("Target Reset"),
+            ));
           }
         },
         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -250,18 +211,16 @@ class TargetSendButton extends ConsumerWidget {
         value: ref.watch(isOnProviders[motorIndex]),
         onChanged: (value) {
           ref.read(isOnProviders[motorIndex].notifier).state = value;
+          if (!value) return; //isOff. It should not send target.
+
           switch (ref.read(modeProviders[motorIndex])) {
             case Mode.dis:
               break;
             case Mode.vel:
-              if (ref.read(isOnProviders[motorIndex])) {
-                sendRobomasTarget(ref, motorIndex);
-              }
+              sendRobomasTarget(ref, motorIndex);
               break;
             case Mode.pos:
-              if (ref.read(isOnProviders[motorIndex])) {
-                sendRobomasTarget(ref, motorIndex);
-              }
+              sendRobomasTarget(ref, motorIndex);
               break;
             default:
               //TODO: handle this case
