@@ -1,49 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:robomas_debuger/terminal.dart';
+import 'package:robomas_debuger/start_page.dart';
 import 'package:robomas_debuger/robomas_page.dart';
 
-void main(){
-  // final counterProvider = StateProvider<int>((ref) => 0);
+void main() {
   runApp(const ProviderScope(child: App()));
 }
 
-class App extends ConsumerStatefulWidget{
+class App extends ConsumerWidget {
   const App({super.key});
 
   @override
-  ConsumerState<App> createState() => _AppState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    return MaterialApp.router(
+        routeInformationProvider: router.routeInformationProvider,
+        routeInformationParser: router.routeInformationParser,
+        routerDelegate: router.routerDelegate,
+        title: 'CRS_Debuger',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+        ));
+  }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
-  return GoRouter(
-    initialLocation: '/Terminal',
-    routes: [
-      GoRoute(
-        path: '/Terminal',
-        builder: (context, state) => Terminal(key: state.pageKey), 
-      ),
-      GoRoute(
-        path: '/RobomasPages',
-        builder: (context, state) => RobomasPages(key: state.pageKey),
-      ),
-    ]
-  );
+  return GoRouter(initialLocation: '/StartPage', routes: [
+    GoRoute(
+      path: '/StartPage',
+      builder: (context, state) => StartPage(key: state.pageKey),
+    ),
+    GoRoute(
+      path: '/RobomasPages',
+      builder: (context, state) => RobomasPages(key: state.pageKey),
+    ),
+  ]);
 });
-
-class _AppState extends ConsumerState<App>{
-  @override
-  Widget build(BuildContext context){
-    final router = ref.watch(routerProvider);
-    return MaterialApp.router(
-      routeInformationProvider: router.routeInformationProvider,
-      routeInformationParser: router.routeInformationParser,
-      routerDelegate: router.routerDelegate,
-      title: 'CRS_Debuger',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      )
-    );
-  }
-}
