@@ -1,17 +1,10 @@
-// import 'package:flutter/services.dart';
-//import 'package:usbcan_plugins/usbcan.dart';
 import 'package:flutter/material.dart';
-//import 'package:usbcan_plugins/frames.dart';
-// import 'package:robomas_debuger/change_datatype.dart';
 import 'package:robomas_debuger/robomas_views.dart';
-// import 'package:usbcan_plugins/frames.dart';
 
 class RobomasControlPage extends StatelessWidget {
   const RobomasControlPage({
     Key? key,
-    /*required this.number*/
   }) : super(key: key);
-  // final int number;
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +15,13 @@ class RobomasControlPage extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   FrameSendButton(
-                    number: 1,
+                    motorIndex: 1,
                   ),
                   TargetResetButton(),
                 ],
               )
             ] +
-            [for (var i = 0; i < 8; i++) TargetWidget(number: i + 1)],
+            [for (var i = 0; i < 8; i++) TargetWidget(motorIndex: i + 1)],
       ),
     );
   }
@@ -36,15 +29,15 @@ class RobomasControlPage extends StatelessWidget {
 
 class RobomasSettingPage extends StatelessWidget {
   const RobomasSettingPage({Key? key}) : super(key: key);
-
+  final int numberOfMotors = 8;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView.builder(
-        itemCount: 8, // PIDTextField の数をカウント
+        itemCount: numberOfMotors, // PIDTextField の数をカウント
         itemBuilder: (context, index) {
           return PIDTextField(
-              number: index + 1); // 生成した番号を引数にして PIDTextField を生成
+              motorIndex: index); // 生成した番号を引数にして PIDTextField を生成
         },
       ),
     );

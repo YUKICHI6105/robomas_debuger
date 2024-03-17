@@ -5,7 +5,6 @@ import 'package:robomas_debuger/start_page.dart';
 import 'package:robomas_debuger/robomas_page.dart';
 
 void main() {
-  // final counterProvider = StateProvider<int>((ref) => 0);
   runApp(const ProviderScope(child: App()));
 }
 

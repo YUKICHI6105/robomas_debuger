@@ -96,15 +96,3 @@ Future<bool> sendRobomasTargetReset(WidgetRef ref, int motorId) async {
           ref.watch(targetProviders[motorId].notifier).state));
   return await usbCan.sendUint8List(sendData);
 }
-
-double check(String value) {
-  double doubleValue = 0.0;
-  try {
-    doubleValue = double.parse(value);
-    // doubleValue は有効な double 値です
-  } catch (e) {
-    doubleValue = 0.0;
-    // パースに失敗した場合のエラーハンドリング
-  }
-  return doubleValue;
-}

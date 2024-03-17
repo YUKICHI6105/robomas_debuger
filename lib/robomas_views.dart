@@ -1,10 +1,7 @@
 import 'package:flutter/services.dart';
-//import 'package:usbcan_plugins/usbcan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
-//import 'package:usbcan_plugins/frames.dart';
-// import 'package:robomas_debuger/change_datatype.dart';
 import 'package:robomas_debuger/robomas_calculation.dart';
 
 class BasicTextField extends StatelessWidget {
@@ -14,7 +11,7 @@ class BasicTextField extends StatelessWidget {
   const BasicTextField(
       {super.key,
       required this.controller,
-      required this.errorText,
+      this.errorText,
       required this.labelText});
 
   @override
@@ -36,30 +33,29 @@ class BasicTextField extends StatelessWidget {
         ),
       ),
     );
-    // return con;
     return con;
   }
 }
 
 class MoterKindButton extends ConsumerWidget {
-  const MoterKindButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const MoterKindButton({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(motorKindProviders[number]),
+      value: ref.watch(motorKindProviders[motorIndex]),
       items: const [
         DropdownMenuItem(value: 0, child: Text('C610')),
         DropdownMenuItem(value: 1, child: Text('C620')),
       ],
       onChanged: (value) {
-        ref.read(motorKindProviders[number].notifier).state = value!;
-        if (ref.read(motorKindProviders[number].notifier).state == 1) {
-          if (ref.read(targetProviders[number].notifier).state > 942 ||
-              ref.read(targetProviders[number].notifier).state < -942) {
-            ref.read(targetProviders[number].notifier).state = 0.0;
+        ref.read(motorKindProviders[motorIndex].notifier).state = value!;
+        if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
+          if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
+              ref.read(targetProviders[motorIndex].notifier).state < -942) {
+            ref.read(targetProviders[motorIndex].notifier).state = 0.0;
           }
         }
       },
@@ -68,44 +64,44 @@ class MoterKindButton extends ConsumerWidget {
 }
 
 class ModeButton extends ConsumerWidget {
-  const ModeButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const ModeButton({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(modeProviders[number]),
+      value: ref.watch(modeProviders[motorIndex]),
       items: const [
         DropdownMenuItem(value: Mode.dis, child: Text('dis')),
         DropdownMenuItem(value: Mode.vel, child: Text('vel')),
         DropdownMenuItem(value: Mode.pos, child: Text('pos'))
       ],
       onChanged: (value) {
-        ref.read(modeProviders[number].notifier).state = value ?? Mode.dis;
+        ref.read(modeProviders[motorIndex].notifier).state = value ?? Mode.dis;
       },
     );
   }
 }
 
 class PIDTextField extends ConsumerWidget {
-  const PIDTextField({super.key, required this.number});
-  final int number;
+  const PIDTextField({super.key, required this.motorIndex});
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final velkptextfield = BasicTextField(
-        controller: ref.read(velkptextfieldcontroller[number - 1]),
+        controller: ref.read(velkptextfieldcontroller[motorIndex]),
         labelText: 'velKp',
         errorText: null);
 
     final velkitextfield = BasicTextField(
-        controller: ref.read(velkitextfieldcontroller[number - 1]),
+        controller: ref.read(velkitextfieldcontroller[motorIndex]),
         labelText: 'velKi',
         errorText: null);
 
     final poskptextfield = BasicTextField(
-        controller: ref.read(poskptextfieldcontroller[number - 1]),
+        controller: ref.read(poskptextfieldcontroller[motorIndex]),
         labelText: 'posKp',
         errorText: null);
 
@@ -113,51 +109,30 @@ class PIDTextField extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.values[5],
       children: [
-        Text('  $number:'),
+        Text('  ${motorIndex + 1}:'),
         MoterKindButton(
-          number: number - 1,
+          motorIndex: motorIndex,
         ),
         ModeButton(
-          number: number - 1,
+          motorIndex: motorIndex,
         ),
         velkptextfield,
         velkitextfield,
         poskptextfield,
       ],
     );
-
-    // return Container(
-    //   width: 400,
-    //   height: 350,
-    //   margin: const EdgeInsets.fromLTRB(20,0,20,0),
-    //   child: Row(
-    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //     mainAxisSize: MainAxisSize.min,
-    //     children: [
-    //       Column(
-    //         mainAxisAlignment: MainAxisAlignment.start,
-    //         mainAxisSize: MainAxisSize.min,
-    //         children: [
-    //           velkptextfield,
-    //           velkitextfield,
-    //           poskptextfield,
-    //         ],
-    //       ),
-    //     ]
-    //   )
-    // );
   }
 }
 
 class FrameSendButton extends ConsumerWidget {
-  const FrameSendButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const FrameSendButton({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
         onPressed: () async {
-          switch (ref.watch(modeProviders[number])) {
+          switch (ref.watch(modeProviders[motorIndex])) {
             case Mode.dis:
               List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
               for (int i = 0; i < 8; i++) {
@@ -171,13 +146,14 @@ class FrameSendButton extends ConsumerWidget {
                     content: Text("Frame Send Error"),
                   ));
                 }
-              } else {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Frame Send"),
-                  ));
-                }
+                return;
               }
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text("Frame Send"),
+                ));
+              }
+
               break;
             case Mode.vel:
               List<int> data = [0, 0, 0, 0, 0, 0, 0, 0];
@@ -264,26 +240,27 @@ class TargetResetButton extends ConsumerWidget {
 }
 
 class TargetSendButton extends ConsumerWidget {
-  const TargetSendButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const TargetSendButton({Key? key, required this.motorIndex})
+      : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Switch(
-        value: ref.watch(isOnProviders[number]),
+        value: ref.watch(isOnProviders[motorIndex]),
         onChanged: (value) {
-          ref.read(isOnProviders[number].notifier).state = value;
-          switch (ref.read(modeProviders[number])) {
+          ref.read(isOnProviders[motorIndex].notifier).state = value;
+          switch (ref.read(modeProviders[motorIndex])) {
             case Mode.dis:
               break;
             case Mode.vel:
-              if (ref.read(isOnProviders[number])) {
-                sendRobomasTarget(ref, number);
+              if (ref.read(isOnProviders[motorIndex])) {
+                sendRobomasTarget(ref, motorIndex);
               }
               break;
             case Mode.pos:
-              if (ref.read(isOnProviders[number])) {
-                sendRobomasTarget(ref, number);
+              if (ref.read(isOnProviders[motorIndex])) {
+                sendRobomasTarget(ref, motorIndex);
               }
               break;
             default:
@@ -291,108 +268,99 @@ class TargetSendButton extends ConsumerWidget {
               break;
           }
         });
-
-    // return ElevatedButton(
-    //   onPressed:  () async { if(await sendRobomasTarget(ref)){
-    //     if(context.mounted){
-    //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //         content: Text("Target Send"),
-    //       ));
-    //     }
-    //   }},
-    //   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-    //   child: const Text('SendTarget')
-    // );
   }
 }
 
 class TargetTextField extends ConsumerWidget {
-  const TargetTextField({super.key, required this.number});
-  final int number;
+  const TargetTextField({super.key, required this.motorIndex});
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return BasicTextField(
-        controller: ref.watch(maxtargetcontroller[number]),
-        errorText: null,
+        controller: ref.watch(maxtargetcontroller[motorIndex]),
         labelText: 'max_target');
   }
 }
 
 class TargetSlider extends ConsumerWidget {
-  const TargetSlider({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const TargetSlider({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    switch (ref.watch(modeProviders[number])) {
+    switch (ref.watch(modeProviders[motorIndex])) {
       case Mode.dis:
         return const Text('dis mode');
       case Mode.vel:
-        if (ref.read(motorKindProviders[number].notifier).state == 1) {
-          if (ref.read(targetProviders[number].notifier).state > 942 ||
-              ref.read(targetProviders[number].notifier).state < -942) {
-            ref.read(targetProviders[number].notifier).state = 0.0;
+        if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
+          if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
+              ref.read(targetProviders[motorIndex].notifier).state < -942) {
+            ref.read(targetProviders[motorIndex].notifier).state = 0.0;
           }
           return Slider(
-            value: ref.watch(targetProviders[number]),
+            value: ref.watch(targetProviders[motorIndex]),
             onChanged: (value) {
-              ref.read(targetProviders[number].notifier).state = value;
-              if (ref.read(isOnProviders[number])) {
-                sendRobomasTarget(ref, number);
+              ref.read(targetProviders[motorIndex].notifier).state = value;
+              if (ref.read(isOnProviders[motorIndex])) {
+                sendRobomasTarget(ref, motorIndex);
               }
             },
             min: -942,
             max: 942,
             divisions: 0x8000,
-            label: ref.watch(targetProviders[number]).toString(),
+            label: ref.watch(targetProviders[motorIndex]).toString(),
           );
         } else {
           return Slider(
-            value: ref.watch(targetProviders[number]),
+            value: ref.watch(targetProviders[motorIndex]),
             onChanged: (value) {
-              ref.read(targetProviders[number].notifier).state = value;
-              if (ref.read(isOnProviders[number])) {
-                sendRobomasTarget(ref, number);
+              ref.read(targetProviders[motorIndex].notifier).state = value;
+              if (ref.read(isOnProviders[motorIndex])) {
+                sendRobomasTarget(ref, motorIndex);
               }
             },
             min: -1885,
             max: 1885,
             divisions: 0x8000,
-            label: ref.watch(targetProviders[number]).toString(),
+            label: ref.watch(targetProviders[motorIndex]).toString(),
           );
         }
       case Mode.pos:
         // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
-        if (ref.read(targetProviders[number].notifier).state >
-                double.parse(ref.watch(maxtargetcontroller[number]).text) ||
-            ref.read(targetProviders[number].notifier).state <
+        if (ref.read(targetProviders[motorIndex].notifier).state >
+                double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ||
+            ref.read(targetProviders[motorIndex].notifier).state <
                 -1 *
-                    double.parse(ref.watch(maxtargetcontroller[number]).text)) {
-          ref.read(targetProviders[number].notifier).state = 0.0;
+                    double.parse(
+                        ref.watch(maxtargetcontroller[motorIndex]).text)) {
+          ref.read(targetProviders[motorIndex].notifier).state = 0.0;
         }
-        if (double.parse(ref.watch(maxtargetcontroller[number]).text) == 0.0) {
-          ref.read(maxtargetcontroller[number]).text = '0.1';
+        if (double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ==
+            0.0) {
+          ref.read(maxtargetcontroller[motorIndex]).text = '0.1';
         }
         return Slider(
-          value: ref.watch(targetProviders[number]),
+          value: ref.watch(targetProviders[motorIndex]),
           onChanged: (value) {
             if (value >
-                    double.parse(ref.watch(maxtargetcontroller[number]).text) ||
+                    double.parse(
+                        ref.watch(maxtargetcontroller[motorIndex]).text) ||
                 value <
                     -1 *
                         double.parse(
-                            ref.watch(maxtargetcontroller[number]).text)) {
-              ref.read(targetProviders[number].notifier).state = 0.0;
+                            ref.watch(maxtargetcontroller[motorIndex]).text)) {
+              ref.read(targetProviders[motorIndex].notifier).state = 0.0;
             } else {
-              ref.read(targetProviders[number].notifier).state = value;
-              sendRobomasTarget(ref, number);
+              ref.read(targetProviders[motorIndex].notifier).state = value;
+              sendRobomasTarget(ref, motorIndex);
             }
           },
-          min: -1 * double.parse(ref.watch(maxtargetcontroller[number]).text),
-          max: double.parse(ref.watch(maxtargetcontroller[number]).text),
+          min: -1 *
+              double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
+          max: double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
           divisions: 0x8000,
-          label: ref.watch(targetProviders[number]).toString(),
+          label: ref.watch(targetProviders[motorIndex]).toString(),
         );
       default:
         return const Text('error');
@@ -401,19 +369,19 @@ class TargetSlider extends ConsumerWidget {
 }
 
 class TargetWidget extends ConsumerWidget {
-  const TargetWidget({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const TargetWidget({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    switch (ref.watch(modeProviders[number - 1])) {
+    switch (ref.watch(modeProviders[motorIndex])) {
       case Mode.dis:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('  $number :'),
-            TargetSlider(number: number - 1),
+            Text('  ${motorIndex + 1} :'),
+            TargetSlider(motorIndex: motorIndex),
           ],
         );
       case Mode.vel:
@@ -421,11 +389,11 @@ class TargetWidget extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('  $number :'),
+            Text('  ${motorIndex + 1} :'),
             TargetSendButton(
-              number: number - 1,
+              motorIndex: motorIndex,
             ),
-            TargetSlider(number: number - 1),
+            TargetSlider(motorIndex: motorIndex),
           ],
         );
       case Mode.pos:
@@ -433,12 +401,12 @@ class TargetWidget extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('  $number :'),
+            Text('  ${motorIndex + 1} :'),
             TargetSendButton(
-              number: number - 1,
+              motorIndex: motorIndex,
             ),
-            TargetTextField(number: number - 1),
-            TargetSlider(number: number - 1),
+            TargetTextField(motorIndex: motorIndex),
+            TargetSlider(motorIndex: motorIndex),
           ],
         );
       default:
