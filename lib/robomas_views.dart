@@ -1,29 +1,30 @@
 import 'package:flutter/services.dart';
-//import 'package:usbcan_plugins/usbcan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
-//import 'package:usbcan_plugins/frames.dart';
-// import 'package:robomas_debuger/change_datatype.dart';
 import 'package:robomas_debuger/robomas_calculation.dart';
 
 class BasicTextField extends StatelessWidget {
   final TextEditingController? controller;
   final String labelText;
   final String? errorText;
-  const BasicTextField({super.key,required this.controller,required this.errorText,required this.labelText});
+  const BasicTextField(
+      {super.key,
+      required this.controller,
+      this.errorText,
+      required this.labelText});
 
   @override
   Widget build(BuildContext context) {
     final con = Container(
       width: 73,
       height: 40,
-      margin: const EdgeInsets.fromLTRB(10,10,10,10),
+      margin: const EdgeInsets.fromLTRB(10, 10, 10, 10),
       child: TextField(
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
         inputFormatters: <TextInputFormatter>[
-                FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
-              ],
+          FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+        ],
         controller: controller,
         decoration: InputDecoration(
           border: const OutlineInputBorder(),
@@ -32,35 +33,29 @@ class BasicTextField extends StatelessWidget {
         ),
       ),
     );
-    // return con;
     return con;
   }
 }
 
 class MoterKindButton extends ConsumerWidget {
-  const MoterKindButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const MoterKindButton({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(motorKindProviders[number]),
+      value: ref.watch(motorKindProviders[motorIndex]),
       items: const [
-        DropdownMenuItem(
-          value: 0,
-          child: Text('C610')
-        ),
-        DropdownMenuItem(
-          value: 1,
-          child: Text('C620')
-        ),
+        DropdownMenuItem(value: 0, child: Text('C610')),
+        DropdownMenuItem(value: 1, child: Text('C620')),
       ],
       onChanged: (value) {
-        ref.read(motorKindProviders[number].notifier).state = value!;
-        if(ref.read(motorKindProviders[number].notifier).state == 1){
-          if(ref.read(targetControllers[number].notifier).state > 942 || ref.read(targetControllers[number].notifier).state < -942){
-            ref.read(targetControllers[number].notifier).state = 0.0;
+        ref.read(motorKindProviders[motorIndex].notifier).state = value!;
+        if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
+          if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
+              ref.read(targetProviders[motorIndex].notifier).state < -942) {
+            ref.read(targetProviders[motorIndex].notifier).state = 0.0;
           }
         }
       },
@@ -69,418 +64,296 @@ class MoterKindButton extends ConsumerWidget {
 }
 
 class ModeButton extends ConsumerWidget {
-  const ModeButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const ModeButton({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(modeProviders[number]),
+      value: ref.watch(modeProviders[motorIndex]),
       items: const [
-        DropdownMenuItem(
-          value: 0,
-          child: Text('dis')
-        ),
-        DropdownMenuItem(
-          value: 1,
-          child: Text('vel')
-        ),
-        DropdownMenuItem(
-          value: 2,
-          child: Text('pos')
-        )
+        DropdownMenuItem(value: Mode.dis, child: Text('dis')),
+        DropdownMenuItem(value: Mode.vel, child: Text('vel')),
+        DropdownMenuItem(value: Mode.pos, child: Text('pos'))
       ],
       onChanged: (value) {
-        ref.read(modeProviders[number].notifier).state = value!;
-        if(ref.read(modeProviders[number].notifier).state == 1){
-          if(ref.read(targetControllers[number].notifier).state > 942 || ref.read(targetControllers[number].notifier).state < -942){
-            ref.read(targetControllers[number].notifier).state = 0.0;
-          }
+        ref.read(modeProviders[motorIndex].notifier).state = value ?? Mode.dis;
+        switch (ref.read(modeProviders[motorIndex])) {
+          case Mode.dis:
+            ref.read(isOnProviders[motorIndex].notifier).state = false;
+            break;
+          case Mode.vel:
+            ref.read(isOnProviders[motorIndex].notifier).state = false;
+            if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
+              if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
+                  ref.read(targetProviders[motorIndex].notifier).state < -942) {
+                ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+              }
+            } else {
+              if (ref.read(targetProviders[motorIndex].notifier).state > 1885 ||
+                  ref.read(targetProviders[motorIndex].notifier).state < -1885) {
+                ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+              }
+            }
+            break;
+          case Mode.pos:
+            ref.read(isOnProviders[motorIndex].notifier).state = false;
+            if (ref.read(targetProviders[motorIndex].notifier).state >
+                    double.parse(
+                        ref.watch(maxtargetcontroller[motorIndex]).text) ||
+                ref.read(targetProviders[motorIndex].notifier).state <
+                    -1 *
+                        double.parse(
+                            ref.watch(maxtargetcontroller[motorIndex]).text)) {
+              ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+            }
+            break;
+          default:
+            break;
         }
-      },
+      }
     );
   }
 }
 
 class PIDTextField extends ConsumerWidget {
-  const PIDTextField({super.key, required this.number});
-  final int number;
+  const PIDTextField({super.key, required this.motorIndex});
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final velkptextfield = BasicTextField(
-    controller: ref.read(velkptextfieldcontroller[number-1]),
-    labelText: 'velKp',
-    errorText: null
-  );
+        controller: ref.read(velkptextfieldcontroller[motorIndex]),
+        labelText: 'velKp',
+        errorText: null);
 
-  final velkitextfield = BasicTextField(
-    controller: ref.read(velkitextfieldcontroller[number-1]),
-    labelText: 'velKi',
-    errorText: null
-  );
+    final velkitextfield = BasicTextField(
+        controller: ref.read(velkitextfieldcontroller[motorIndex]),
+        labelText: 'velKi',
+        errorText: null);
 
-  final poskptextfield = BasicTextField(
-    controller: ref.read(poskptextfieldcontroller[number-1]),
-    labelText: 'posKp',
-    errorText: null
-  );
+    final poskptextfield = BasicTextField(
+        controller: ref.read(poskptextfieldcontroller[motorIndex]),
+        labelText: 'posKp',
+        errorText: null);
 
-  return  Row(
+    return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.values[5],
       children: [
-        Text('  $number:'),
-        MoterKindButton(number: number-1,),
-        ModeButton(number: number-1,),
+        Text('  ${motorIndex + 1}:'),
+        MoterKindButton(
+          motorIndex: motorIndex,
+        ),
+        ModeButton(
+          motorIndex: motorIndex,
+        ),
         velkptextfield,
         velkitextfield,
         poskptextfield,
       ],
-      
-  );
-
-    // return Container(
-    //   width: 400,
-    //   height: 350,
-    //   margin: const EdgeInsets.fromLTRB(20,0,20,0),
-    //   child: Row(
-    //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    //     mainAxisSize: MainAxisSize.min,
-    //     children: [
-    //       Column(
-    //         mainAxisAlignment: MainAxisAlignment.start,
-    //         mainAxisSize: MainAxisSize.min,
-    //         children: [
-    //           velkptextfield,
-    //           velkitextfield,
-    //           poskptextfield,
-    //         ],
-    //       ),
-    //     ]
-    //   )
-    // );
-  }
-}
-
-class FrameSendButton extends ConsumerWidget{
-  const FrameSendButton({Key? key, required this.number}) : super(key: key);
-  final int number;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref){
-    // final RobomasterSettingFrame robomasterDisSettingFrame = RobomasterSettingFrame(
-    //   ref.watch(motorKind),
-    //   ref.watch(modeProvider),
-    //   ref.watch(motorId),
-    //   50,
-    //   1,
-    //   0,
-    //   0,
-    //   0
-    // );
-    // final RobomasterSettingFrame robomasterVelSettingFrame = RobomasterSettingFrame(
-    //   ref.watch(motorKind),
-    //   ref.watch(modeProvider),
-    //   ref.watch(motorId),
-    //   50,
-    //   check(ref.watch(velkptextfieldcontroller).text),
-    //   check(ref.watch(velkitextfieldcontroller).text),
-    //   check(ref.watch(velkdtextfieldcontroller).text),
-    //   check(ref.watch(vellimitIetextfieldcontroller).text)
-    // );
-    // final RobomasterSettingFrame robomasterPosSettingFrame = RobomasterSettingFrame(
-    //   ref.watch(motorKind),
-    //   ref.watch(modeProvider),
-    //   ref.watch(motorId),
-    //   50,
-    //   check(ref.watch(poskptextfieldcontroller).text),
-    //   check(ref.watch(poskitextfieldcontroller).text),
-    //   check(ref.watch(poskdtextfieldcontroller).text),
-    //   check(ref.watch(poslimitIetextfieldcontroller).text)
-    // );
-    // push(BuildContext context, WidgetRef ref){
-    //   () async{
-    //     if(await sendRobomasFrame(0, 0, 0, 0, a)){
-    //       // if(context.mounted){
-    //       //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //       //     content: Text("Frame Send"),
-    //       //   ));
-    //       // }
-    //     }
-    //   };
-    // switch(ref.watch(modeProvider)){
-    //   case 0:
-    //   () async{
-    //     if(await sendRobomasFrame(0, 0, 0, 0, a)){
-    //       // if(context.mounted){
-    //       //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //       //     content: Text("Frame Send"),
-    //       //   ));
-    //       // }
-    //     }
-    //   };
-    //     break;
-    //   case 1:
-    //   // () async{
-    //   //   if(await sendRobomasFrame(ref.watch(motorId), ref.watch(motorKind), ref.watch(modeProvider), 50, data)){
-    //       if(context.mounted){
-    //         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //           content: Text("Frame Send"),
-    //         ));
-    //   //     }
-    //   //   }
-    //   };
-    //     break;
-    //   case 2:
-    //   () async{
-    //     if(await sendRobomasFrame(ref.watch(motorId), ref.watch(motorKind), ref.watch(modeProvider), 50, data)){
-    //       if(context.mounted){
-    //         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //           content: Text("Frame Send"),
-    //         ));
-    //       }
-    //     }
-    //   };
-    //     break;
-    // }
-  // }
-    return ElevatedButton(
-      onPressed: () async{
-        switch(ref.watch(modeProviders[number])){
-          case 0:
-          List<int> data = [0,0,0,0,0,0,0,0];
-            for(int i=0; i<8; i++){
-              if(await sendRobomasDisFrame(ref, i, 50)){
-                data[i] = 1;
-              }
-            }
-            if(data.contains(0)){
-              if(context.mounted){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send Error"),
-                ));
-              }
-            }else{
-              if(context.mounted){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send"),
-                ));
-              }
-            }
-            break;
-          case 1:
-            List<int> data = [0,0,0,0,0,0,0,0];
-            for(int i=0; i<8; i++){
-              if(await sendRobomasVelFrame(ref, i,50)){
-                data[i] = 1;
-              }
-            }
-            if(data.contains(0)){
-              if(context.mounted){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send Error"),
-                ));
-              }
-            }else{
-              if(context.mounted){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send"),
-                ));
-              }
-            }
-            break;
-          case 2:
-            List<int> data = [0,0,0,0,0,0,0,0];
-            for(int i=0; i<8; i++){
-              if(await sendRobomasPosFrame(ref, i,50)){
-                data[i] = 1;
-              }
-            }
-            if(data.contains(0)){
-              if(context.mounted){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send Error"),
-                ));
-              }
-            }else{
-              if(context.mounted){
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text("Frame Send"),
-                ));
-              }
-            }
-            break;
-        }
-      },
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-      child: const Text('SendFrame')
     );
   }
 }
 
-class TargetResetButton extends ConsumerWidget{
+class FrameSendButton extends ConsumerWidget {
+  const FrameSendButton({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
+
+  final limitTemp = 50;
+
+  Future<void> _sendFrame(
+      BuildContext context,
+      WidgetRef ref,
+      Future<bool> Function(WidgetRef ref, int motorId, int limitTemp)
+          sendRobomasFrame) async {
+    List<bool> data = await Future.wait(List.generate(
+        8, (index) => sendRobomasDisFrame(ref, index, limitTemp)));
+    bool allTrue = data.every((element) => element);
+    if (!context.mounted) return;
+    if (!allTrue) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Frame Send Error"),
+      ));
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Frame Send"),
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return ElevatedButton(
+        onPressed: () async {
+          switch (ref.watch(modeProviders[motorIndex])) {
+            case Mode.dis:
+              await _sendFrame(context, ref, sendRobomasDisFrame);
+              break;
+            case Mode.vel:
+              await _sendFrame(context, ref, sendRobomasVelFrame);
+              break;
+            case Mode.pos:
+              await _sendFrame(context, ref, sendRobomasPosFrame);
+              break;
+            default:
+              // TODO: Handle this case.
+              break;
+          }
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+        child: const Text('SendFrame'));
+  }
+}
+
+class TargetResetButton extends ConsumerWidget {
   const TargetResetButton({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref){
+  Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
-      onPressed: () async { 
-        List<int> data = [0,0,0,0,0,0,0,0];
-        for(int i=0; i<8; i++){
-          if(await sendRobomasTargetReset(ref,i)){
-            data[i] = 1;
-          }
-        }
-        if(data.contains(0)){
-          if(context.mounted){
+        onPressed: () async {
+          List<bool> data = await Future.wait(
+              List.generate(8, (index) => sendRobomasTargetReset(ref, index)));
+          bool allTrue = data.every((element) => element);
+          if (!context.mounted) return;
+          if (allTrue) {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text("Target Reset Error"),
             ));
-          }
-        }else{
-          if(context.mounted){
+          } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
               content: Text("Target Reset"),
             ));
           }
-        }
-      },
-      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-      child: const Text('ResetTarget')
-    );
+        },
+        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+        child: const Text('ResetTarget'));
   }
 }
 
-class TargetSendButton extends ConsumerWidget{
-  const TargetSendButton({Key? key, required this.number}) : super(key: key);
-  final int number;
+class TargetSendButton extends ConsumerWidget {
+  const TargetSendButton({Key? key, required this.motorIndex})
+      : super(key: key);
+  final int motorIndex;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref){
+  Widget build(BuildContext context, WidgetRef ref) {
     return Switch(
-      value: ref.watch(isOnProviders[number]), 
-      onChanged: (value) {
-        ref.read(isOnProviders[number].notifier).state = value;
-        switch(ref.read(modeProviders[number])){
-          case 0:
-            break;
-          case 1:
-            if(ref.read(isOnProviders[number])){
-              sendRobomasTarget(ref, number);
-            }
-            break;
-          case 2:
-            if(ref.read(isOnProviders[number])){
-              sendRobomasTarget(ref, number);
-            }
-            break;
-        }
-      }
-    );
+        value: ref.watch(isOnProviders[motorIndex]),
+        onChanged: (value) {
+          ref.read(isOnProviders[motorIndex].notifier).state = value;
+          if (!value) return; //isOff. It should not send target.
 
-
-    // return ElevatedButton(
-    //   onPressed:  () async { if(await sendRobomasTarget(ref)){
-    //     if(context.mounted){
-    //       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-    //         content: Text("Target Send"),
-    //       ));
-    //     }
-    //   }},
-    //   style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-    //   child: const Text('SendTarget')
-    // );
+          switch (ref.read(modeProviders[motorIndex])) {
+            case Mode.dis:
+              break;
+            case Mode.vel:
+              sendRobomasTarget(ref, motorIndex);
+              break;
+            case Mode.pos:
+              sendRobomasTarget(ref, motorIndex);
+              break;
+            default:
+              //TODO: handle this case
+              break;
+          }
+        });
   }
 }
 
 class TargetTextField extends ConsumerWidget {
-  const TargetTextField({super.key, required this.number});
-  final int number;
+  const TargetTextField({super.key, required this.motorIndex});
+  final int motorIndex;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return BasicTextField(
-      controller: ref.watch(maxtargetcontroller[number]),
-      errorText: null,
-      labelText: 'max_target'
-    );
+        controller: ref.watch(maxtargetcontroller[motorIndex]),
+        labelText: 'max_target');
   }
 }
 
 class TargetSlider extends ConsumerWidget {
-  const TargetSlider({Key? key, required this.number}) : super(key: key);
-  final int number;
+  const TargetSlider({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref){
-    switch(ref.watch(modeProviders[number])){
-      case 0:
+  Widget build(BuildContext context, WidgetRef ref) {
+    switch (ref.watch(modeProviders[motorIndex])) {
+      case Mode.dis:
         return const Text('dis mode');
-      case 1:
-      if(ref.read(targetControllers[number].notifier).state > 1885 || ref.read(targetControllers[number].notifier).state < -1885){
-        ref.read(targetControllers[number].notifier).state = 0.0;
-      }
-      if(ref.read(motorKindProviders[number].notifier).state == 1){
-        if(ref.read(targetControllers[number].notifier).state > 942 || ref.read(targetControllers[number].notifier).state < -942){
-          ref.read(targetControllers[number].notifier).state = 0.0;
+      case Mode.vel:
+        if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
+          if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
+              ref.read(targetProviders[motorIndex].notifier).state < -942) {
+            ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+          }
+          return Slider(
+            value: ref.watch(targetProviders[motorIndex]),
+            onChanged: (value) {
+              ref.read(targetProviders[motorIndex].notifier).state = value;
+              if (ref.read(isOnProviders[motorIndex])) {
+                sendRobomasTarget(ref, motorIndex);
+              }
+            },
+            min: -942,
+            max: 942,
+            divisions: 0x8000,
+            label: ref.watch(targetProviders[motorIndex]).toString(),
+          );
+        } else {
+          return Slider(
+            value: ref.watch(targetProviders[motorIndex]),
+            onChanged: (value) {
+              ref.read(targetProviders[motorIndex].notifier).state = value;
+              if (ref.read(isOnProviders[motorIndex])) {
+                sendRobomasTarget(ref, motorIndex);
+              }
+            },
+            min: -1885,
+            max: 1885,
+            divisions: 0x8000,
+            label: ref.watch(targetProviders[motorIndex]).toString(),
+          );
+        }
+      case Mode.pos:
+        // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
+        if (ref.read(targetProviders[motorIndex].notifier).state >
+                double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ||
+            ref.read(targetProviders[motorIndex].notifier).state <
+                -1 *
+                    double.parse(
+                        ref.watch(maxtargetcontroller[motorIndex]).text)) {
+          ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+        }
+        if (double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ==
+            0.0) {
+          ref.read(maxtargetcontroller[motorIndex]).text = '0.1';
         }
         return Slider(
-          value: ref.watch(targetControllers[number]),
+          value: ref.watch(targetProviders[motorIndex]),
           onChanged: (value) {
-            ref.read(targetControllers[number].notifier).state = value;
-            if(ref.read(isOnProviders[number])){
-              sendRobomasTarget(ref, number);
+            if (value >
+                    double.parse(
+                        ref.watch(maxtargetcontroller[motorIndex]).text) ||
+                value <
+                    -1 *
+                        double.parse(
+                            ref.watch(maxtargetcontroller[motorIndex]).text)) {
+              ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+            } else {
+              ref.read(targetProviders[motorIndex].notifier).state = value;
+              sendRobomasTarget(ref, motorIndex);
             }
           },
-          min: -942,
-          max: 942,
+          min: -1 *
+              double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
+          max: double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
           divisions: 0x8000,
-          label: ref.watch(targetControllers[number]).toString(),
+          label: ref.watch(targetProviders[motorIndex]).toString(),
         );
-      }else{
-        return Slider(
-          value: ref.watch(targetControllers[number]),
-          onChanged: (value) {
-            ref.read(targetControllers[number].notifier).state = value;
-            if(ref.read(isOnProviders[number])){
-              sendRobomasTarget(ref, number);
-            }
-          },
-          min: -1885,
-          max: 1885,
-          divisions: 0x8000,
-          label: ref.watch(targetControllers[number]).toString(),
-        );
-      }
-      case 2:
-      // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
-        if(ref.read(targetControllers[number].notifier).state > double.parse(ref.watch(maxtargetcontroller[number]).text) || ref.read(targetControllers[number].notifier).state < -1*double.parse(ref.watch(maxtargetcontroller[number]).text)){
-          ref.read(targetControllers[number].notifier).state = 0.0;
-        }
-        if(double.parse(ref.watch(maxtargetcontroller[number]).text) == 0.0){
-          ref.read(maxtargetcontroller[number]).text = '0.1';
-        }
-        return Slider(
-          value: ref.watch(targetControllers[number]),
-          onChanged: (value) {
-            if(value > double.parse(ref.watch(maxtargetcontroller[number]).text) || value < -1*double.parse(ref.watch(maxtargetcontroller[number]).text)){
-              ref.read(targetControllers[number].notifier).state = 0.0;
-            }else{
-              ref.read(targetControllers[number].notifier).state = value;
-              sendRobomasTarget(ref, number);
-            }
-          },
-          min: -1*double.parse(ref.watch(maxtargetcontroller[number]).text),
-          max: double.parse(ref.watch(maxtargetcontroller[number]).text),
-          divisions: 0x8000,
-          label: ref.watch(targetControllers[number]).toString(),
-        );
-      // }else{
-      //   return const Text('error');
-      // }
       default:
         return const Text('error');
     }
@@ -488,69 +361,66 @@ class TargetSlider extends ConsumerWidget {
 }
 
 class TargetWidget extends ConsumerWidget {
-  const TargetWidget({Key? key ,required this.number}) : super(key: key);
-  final int number;
+  const TargetWidget({Key? key, required this.motorIndex}) : super(key: key);
+  final int motorIndex;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref){
-    switch(ref.watch(modeProviders[number-1])){
-      case 0:
-      return Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Text('  $number :'),
-            TargetSlider(number:number-1),
-          ],
-        );
-      case 1:
+  Widget build(BuildContext context, WidgetRef ref) {
+    switch (ref.watch(modeProviders[motorIndex])) {
+      case Mode.dis:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('  $number :'),
-            TargetSendButton(number: number-1,),
-            TargetSlider(number:number-1),
+            Text('  ${motorIndex + 1} :'),
+            TargetSlider(motorIndex: motorIndex),
           ],
         );
-      case 2:
+      case Mode.vel:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text('  $number :'),
-            TargetSendButton(number: number-1,),
-            TargetTextField(number: number-1),
-            TargetSlider(number:number-1),
+            Text('  ${motorIndex + 1} :'),
+            TargetSendButton(
+              motorIndex: motorIndex,
+            ),
+            TargetSlider(motorIndex: motorIndex),
+          ],
+        );
+      case Mode.pos:
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            Text('  ${motorIndex + 1} :'),
+            TargetSendButton(
+              motorIndex: motorIndex,
+            ),
+            TargetTextField(motorIndex: motorIndex),
+            TargetSlider(motorIndex: motorIndex),
           ],
         );
       default:
         return const Text('error');
-    }  
+    }
   }
 }
 
-class DiagButton extends ConsumerWidget {
-  const DiagButton({Key? key}) : super(key: key);
+class DiagDropdownButton extends ConsumerWidget {
+  const DiagDropdownButton({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(diag).toString(),
+      value: ref.watch(diagProvider),
       items: const [
-        DropdownMenuItem(
-          value: 'off',
-          child: Text('off')
-        ),
-        DropdownMenuItem(
-          value: 'on',
-          child: Text('on')
-        ),
+        DropdownMenuItem(value: 'off', child: Text('off')),
+        DropdownMenuItem(value: 'on', child: Text('on')),
       ],
       onChanged: (value) {
-        ref.read(diag.notifier).state = value.toString();
+        ref.read(diagProvider.notifier).state = value ?? "";
       },
     );
   }
