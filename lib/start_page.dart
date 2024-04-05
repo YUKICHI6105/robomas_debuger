@@ -14,7 +14,6 @@ class RobomasButton extends StatelessWidget {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text("RobomasController IS NOT CONNECTED"),
               ));
-              context.push('/RobomasPages');
             }
             return;
           }
