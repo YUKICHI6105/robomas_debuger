@@ -14,14 +14,12 @@ class RobomasControlPage extends StatelessWidget {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  FrameSendButton(
-                    motorIndex: 1,
-                  ),
+                  FrameSendButton(),
                   TargetResetButton(),
                 ],
               )
             ] +
-            [for (var i = 0; i < 8; i++) TargetWidget(motorIndex: i + 1)],
+            [for (var i = 0; i < 8; i++) TargetWidget(motorIndex: i )],
       ),
     );
   }

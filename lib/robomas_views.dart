@@ -79,7 +79,7 @@ class ModeButton extends ConsumerWidget {
       ],
       onChanged: (value) {
         ref.read(modeProviders[motorIndex].notifier).state = value ?? Mode.dis;
-        switch (ref.read(modeProviders[motorIndex])) {
+        switch (ref.read(modeProviders[motorIndex].notifier).state)  {
           case Mode.dis:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
             break;
@@ -158,9 +158,8 @@ class PIDTextField extends ConsumerWidget {
 }
 
 class FrameSendButton extends ConsumerWidget {
-  const FrameSendButton({Key? key, required this.motorIndex}) : super(key: key);
-  final int motorIndex;
-
+  const FrameSendButton({Key? key}) : super(key: key);
+  
   final limitTemp = 50;
 
   Future<void> _sendFrame(
@@ -169,7 +168,7 @@ class FrameSendButton extends ConsumerWidget {
       Future<bool> Function(WidgetRef ref, int motorId, int limitTemp)
           sendRobomasFrame) async {
     List<bool> data = await Future.wait(List.generate(
-        8, (index) => sendRobomasDisFrame(ref, index, limitTemp)));
+        8, (index) => sendRobomasFrame(ref, index, limitTemp)));
     bool allTrue = data.every((element) => element);
     if (!context.mounted) return;
     if (!allTrue) {
@@ -183,24 +182,26 @@ class FrameSendButton extends ConsumerWidget {
     ));
   }
 
+  Future<bool> sendRobomasFrame(WidgetRef ref, int motorId, int limitTemp) async{
+    switch (ref.watch(modeProviders[motorId].notifier).state) {
+            case Mode.dis:
+              return await sendRobomasDisFrame(ref, motorId, limitTemp);
+            case Mode.vel:
+              return await sendRobomasVelFrame(ref, motorId, limitTemp);
+            case Mode.pos:
+              return await sendRobomasPosFrame(ref, motorId, limitTemp);
+            default:
+            debugPrint('error');
+              // TODO: Handle this case.
+              return false;
+          }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
         onPressed: () async {
-          switch (ref.watch(modeProviders[motorIndex])) {
-            case Mode.dis:
-              await _sendFrame(context, ref, sendRobomasDisFrame);
-              break;
-            case Mode.vel:
-              await _sendFrame(context, ref, sendRobomasVelFrame);
-              break;
-            case Mode.pos:
-              await _sendFrame(context, ref, sendRobomasPosFrame);
-              break;
-            default:
-              // TODO: Handle this case.
-              break;
-          }
+          await _sendFrame(context, ref, sendRobomasFrame);
         },
         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
         child: const Text('SendFrame'));

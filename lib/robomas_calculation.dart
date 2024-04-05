@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
@@ -15,6 +16,7 @@ Future<bool> sendRobomasDisFrame(
       sendData[1] + intToUint8List(ref.watch(modeProviders[motorId]).index)[0];
   sendData[2] = intToUint8List(limitTemp)[0];
   sendData[3] = intToUint8List(1)[0];
+  debugPrint(sendData.toString());
   return await usbCan.sendUint8List(sendData);
 }
 
@@ -38,6 +40,7 @@ Future<bool> sendRobomasVelFrame(
       doubleToFloattoUint8list(
           double.parse(ref.watch(velkitextfieldcontroller[motorId]).text)));
   //sendData.setRange(3, data.length + 3, data);
+  debugPrint(sendData.toString());
   return await usbCan.sendUint8List(sendData);
 }
 
@@ -61,7 +64,7 @@ Future<bool> sendRobomasPosFrame(
       doubleToFloattoUint8list(
           double.parse(ref.watch(velkitextfieldcontroller[motorId]).text)));
   sendData.setRange(
-      12,
+      11,
       15,
       doubleToFloattoUint8list(
           double.parse(ref.watch(poskptextfieldcontroller[motorId]).text)));
