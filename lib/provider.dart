@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:robomas_debuger/usbcan_extends.dart';
+// import 'package:robomas_debuger/usbcan_extends.dart';
+import 'package:usbcan_plugins/frames.dart';
+import 'package:robomas_debuger/frame.dart';
 import 'package:usbcan_plugins/usbcan.dart';
 
 enum Mode {
@@ -10,28 +14,25 @@ enum Mode {
   stablepos,
 }
 
-UsbCan usbCan = UsbCan();
+RobomasUsb robomasUsb = RobomasUsb();
 
-final List<StateProvider<Mode>> modeProviders = List.generate(
-    8,
-    (index) => StateProvider((ref) {
-          return Mode.dis;
-        }));
-
-final List<StateProvider<double>> targetProviders = List.generate(
-    8,
-    (index) => StateProvider((ref) {
-          return 0.0;
-        }));
+final List<StateProvider<RobomasterParameterFrame>> robomasterParameterFrameProviders =
+    List.generate(
+  8,
+  (index) => StateProvider((ref) {
+    return RobomasterParameterFrame(
+      RobomasterMotorType.c610,
+      RobomasterMotorMode.dis,
+      index,
+      0.0,
+      0.0,
+      0.0,
+    );
+  }),
+);
 
 // now is not used. It is only called from [DiagDropdownButton]
 final diagProvider = StateProvider<String>((ref) => 'off');
-
-final List<StateProvider<int>> motorKindProviders = List.generate(
-    8,
-    (index) => StateProvider((ref) {
-          return 1;
-        }));
 
 final List<StateProvider<bool>> isOnProviders = List.generate(
     8,

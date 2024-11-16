@@ -2,7 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
-import 'package:robomas_debuger/robomas_calculation.dart';
+import 'package:usbcan_plugins/frames.dart';
 
 class BasicTextField extends StatelessWidget {
   final TextEditingController? controller;
@@ -45,17 +45,17 @@ class MoterKindButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(motorKindProviders[motorIndex]),
+      value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType,
       items: const [
-        DropdownMenuItem(value: 0, child: Text('C610')),
-        DropdownMenuItem(value: 1, child: Text('C620')),
+        DropdownMenuItem(value: RobomasterMotorType.c610, child: Text('C610')),
+        DropdownMenuItem(value: RobomasterMotorType.c620, child: Text('C620')),
       ],
       onChanged: (value) {
-        ref.read(motorKindProviders[motorIndex].notifier).state = value!;
-        if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
-          if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
-              ref.read(targetProviders[motorIndex].notifier).state < -942) {
-            ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+        ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType = value!;
+        if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType == RobomasterMotorType.c620) {
+          if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 942 ||
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -942) {
+            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
           }
         }
       },
@@ -71,42 +71,42 @@ class ModeButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(modeProviders[motorIndex]),
+      value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode,
       items: const [
-        DropdownMenuItem(value: Mode.dis, child: Text('dis')),
-        DropdownMenuItem(value: Mode.vel, child: Text('vel')),
-        DropdownMenuItem(value: Mode.pos, child: Text('pos'))
+        DropdownMenuItem(value: RobomasterMotorMode.dis, child: Text('dis')),
+        DropdownMenuItem(value: RobomasterMotorMode.vel, child: Text('vel')),
+        DropdownMenuItem(value: RobomasterMotorMode.pos, child: Text('pos'))
       ],
       onChanged: (value) {
-        ref.read(modeProviders[motorIndex].notifier).state = value ?? Mode.dis;
-        switch (ref.read(modeProviders[motorIndex].notifier).state)  {
-          case Mode.dis:
+        ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode = value ?? RobomasterMotorMode.dis;
+        switch (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode)  {
+          case RobomasterMotorMode.dis:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
             break;
-          case Mode.vel:
+          case RobomasterMotorMode.vel:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
-            if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
-              if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
-                  ref.read(targetProviders[motorIndex].notifier).state < -942) {
-                ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+            if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType == RobomasterMotorType.c620) {
+              if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 942 ||
+                  ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -942) {
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
               }
             } else {
-              if (ref.read(targetProviders[motorIndex].notifier).state > 1885 ||
-                  ref.read(targetProviders[motorIndex].notifier).state < -1885) {
-                ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+              if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 1885 ||
+                  ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -1885) {
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
               }
             }
             break;
-          case Mode.pos:
+          case RobomasterMotorMode.pos:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
-            if (ref.read(targetProviders[motorIndex].notifier).state >
+            if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target >
                     double.parse(
                         ref.watch(maxtargetcontroller[motorIndex]).text) ||
-                ref.read(targetProviders[motorIndex].notifier).state <
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target <
                     -1 *
                         double.parse(
                             ref.watch(maxtargetcontroller[motorIndex]).text)) {
-              ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
             }
             break;
           default:
@@ -159,16 +159,12 @@ class PIDTextField extends ConsumerWidget {
 
 class FrameSendButton extends ConsumerWidget {
   const FrameSendButton({Key? key}) : super(key: key);
-  
-  final limitTemp = 50;
 
   Future<void> _sendFrame(
       BuildContext context,
-      WidgetRef ref,
-      Future<bool> Function(WidgetRef ref, int motorId, int limitTemp)
-          sendRobomasFrame) async {
+      WidgetRef ref) async {
     List<bool> data = await Future.wait(List.generate(
-        8, (index) => sendRobomasFrame(ref, index, limitTemp)));
+        8, (index) => robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[index].notifier).state)));
     bool allTrue = data.every((element) => element);
     if (!context.mounted) return;
     if (!allTrue) {
@@ -182,26 +178,11 @@ class FrameSendButton extends ConsumerWidget {
     ));
   }
 
-  Future<bool> sendRobomasFrame(WidgetRef ref, int motorId, int limitTemp) async{
-    switch (ref.watch(modeProviders[motorId].notifier).state) {
-            case Mode.dis:
-              return await sendRobomasDisFrame(ref, motorId, limitTemp);
-            case Mode.vel:
-              return await sendRobomasVelFrame(ref, motorId, limitTemp);
-            case Mode.pos:
-              return await sendRobomasPosFrame(ref, motorId, limitTemp);
-            default:
-            debugPrint('error');
-              // TODO: Handle this case.
-              return false;
-          }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
         onPressed: () async {
-          await _sendFrame(context, ref, sendRobomasFrame);
+          await _sendFrame(context, ref);
         },
         style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
         child: const Text('SendFrame'));
@@ -211,24 +192,43 @@ class FrameSendButton extends ConsumerWidget {
 class TargetResetButton extends ConsumerWidget {
   const TargetResetButton({Key? key}) : super(key: key);
 
+  Future<void> _sendResetFrame(
+    BuildContext context, WidgetRef ref) async {
+  // すべてのモーターターゲットをリセット
+  List<Future<bool>> resetFutures = List.generate(8, (index) async {
+    ref.read(maxtargetcontroller[index]).text = '0.0';
+    ref.read(robomasterParameterFrameProviders[index].notifier).state.target = 0.0;
+    return await robomasUsb.sendFrame(
+        ref.watch(robomasterParameterFrameProviders[index].notifier).state.generateTargetFrame());
+  });
+
+  // フレーム送信結果を待つ
+  List<bool> resetResults = await Future.wait(resetFutures);
+  bool allResetsSuccessful = resetResults.every((result) => result);
+
+  // コンテキストがまだ有効か確認
+  if (!context.mounted) return;
+
+  // 成功・失敗のメッセージを表示
+  if (!allResetsSuccessful) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text("Frame Reset Error"),
+    ));
+    return;
+  }
+  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+    content: Text("Frame Reset Successful"),
+  ));
+}
+
+
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ElevatedButton(
         onPressed: () async {
-          List<bool> data = await Future.wait(
-              List.generate(8, (index) => sendRobomasTargetReset(ref, index)));
-          bool allTrue = data.every((element) => element);
-          if (!context.mounted) return;
-          if (allTrue) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Target Reset Error"),
-            ));
-          } else {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-              content: Text("Target Reset"),
-            ));
-          }
-        },
+          await _sendResetFrame(context, ref);
+          },
         style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
         child: const Text('ResetTarget'));
   }
@@ -247,17 +247,17 @@ class TargetSendButton extends ConsumerWidget {
           ref.read(isOnProviders[motorIndex].notifier).state = value;
           if (!value) return; //isOff. It should not send target.
 
-          switch (ref.read(modeProviders[motorIndex])) {
-            case Mode.dis:
+          switch (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode) {
+            case RobomasterMotorMode.dis:
               break;
-            case Mode.vel:
-              sendRobomasTarget(ref, motorIndex);
-              break;
-            case Mode.pos:
-              sendRobomasTarget(ref, motorIndex);
+            case RobomasterMotorMode.vel:
+            case RobomasterMotorMode.pos:
+              robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.generateTargetFrame());
               break;
             default:
-              //TODO: handle this case
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                content: Text("Target Send Error"),
+              ));
               break;
           }
         });
@@ -282,59 +282,59 @@ class TargetSlider extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    switch (ref.watch(modeProviders[motorIndex])) {
-      case Mode.dis:
+    switch (ref.watch(robomasterParameterFrameProviders[motorIndex]).motorMode) {
+      case RobomasterMotorMode.dis:
         return const Text('dis mode');
-      case Mode.vel:
-        if (ref.read(motorKindProviders[motorIndex].notifier).state == 1) {
-          if (ref.read(targetProviders[motorIndex].notifier).state > 942 ||
-              ref.read(targetProviders[motorIndex].notifier).state < -942) {
-            ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+      case RobomasterMotorMode.vel:
+        if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType == RobomasterMotorType.c620) {
+          if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 942 ||
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -942) {
+            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
           }
           return Slider(
-            value: ref.watch(targetProviders[motorIndex]),
+            value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target,
             onChanged: (value) {
-              ref.read(targetProviders[motorIndex].notifier).state = value;
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = value;
               if (ref.read(isOnProviders[motorIndex])) {
-                sendRobomasTarget(ref, motorIndex);
+                robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state);
               }
             },
             min: -942,
             max: 942,
             divisions: 0x8000,
-            label: ref.watch(targetProviders[motorIndex]).toString(),
+            label: ref.watch(robomasterParameterFrameProviders[motorIndex]).toString(),
           );
         } else {
           return Slider(
-            value: ref.watch(targetProviders[motorIndex]),
+            value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target,
             onChanged: (value) {
-              ref.read(targetProviders[motorIndex].notifier).state = value;
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = value;
               if (ref.read(isOnProviders[motorIndex])) {
-                sendRobomasTarget(ref, motorIndex);
+                robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state);
               }
             },
             min: -1885,
             max: 1885,
             divisions: 0x8000,
-            label: ref.watch(targetProviders[motorIndex]).toString(),
+            label: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target.toString(),
           );
         }
-      case Mode.pos:
+      case RobomasterMotorMode.pos:
         // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
-        if (ref.read(targetProviders[motorIndex].notifier).state >
+        if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target >
                 double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ||
-            ref.read(targetProviders[motorIndex].notifier).state <
+            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target <
                 -1 *
                     double.parse(
                         ref.watch(maxtargetcontroller[motorIndex]).text)) {
-          ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+          ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
         }
         if (double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ==
             0.0) {
           ref.read(maxtargetcontroller[motorIndex]).text = '0.1';
         }
         return Slider(
-          value: ref.watch(targetProviders[motorIndex]),
+          value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target,
           onChanged: (value) {
             if (value >
                     double.parse(
@@ -343,17 +343,17 @@ class TargetSlider extends ConsumerWidget {
                     -1 *
                         double.parse(
                             ref.watch(maxtargetcontroller[motorIndex]).text)) {
-              ref.read(targetProviders[motorIndex].notifier).state = 0.0;
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
             } else {
-              ref.read(targetProviders[motorIndex].notifier).state = value;
-              sendRobomasTarget(ref, motorIndex);
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = value;
+              robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state);
             }
           },
           min: -1 *
               double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
           max: double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
           divisions: 0x8000,
-          label: ref.watch(targetProviders[motorIndex]).toString(),
+          label: ref.watch(robomasterParameterFrameProviders[motorIndex]).toString(),
         );
       default:
         return const Text('error');
@@ -367,8 +367,8 @@ class TargetWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    switch (ref.watch(modeProviders[motorIndex])) {
-      case Mode.dis:
+    switch (ref.watch(robomasterParameterFrameProviders[motorIndex]).motorMode) {
+      case RobomasterMotorMode.dis:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -377,7 +377,7 @@ class TargetWidget extends ConsumerWidget {
             TargetSlider(motorIndex: motorIndex),
           ],
         );
-      case Mode.vel:
+      case RobomasterMotorMode.vel:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -389,7 +389,7 @@ class TargetWidget extends ConsumerWidget {
             TargetSlider(motorIndex: motorIndex),
           ],
         );
-      case Mode.pos:
+      case RobomasterMotorMode.pos:
         return Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceAround,

@@ -9,7 +9,7 @@ class RobomasButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
         onPressed: () async {
-          if (!(await usbCan.connectUSB(0x40a))) {
+          if (!(await robomasUsb.connectUSBwithpid(0x40a))) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
                 content: Text("RobomasController IS NOT CONNECTED"),
