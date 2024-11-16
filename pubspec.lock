@@ -274,8 +274,8 @@ packages:
     description:
       path: "."
       ref: nightly
-      resolved-ref: bacdb694bda6b83ec8fdfea9691dd7206758ca26
-      url: "https://github.com/YUKICHI6105/usbcan_plugins"
+      resolved-ref: "58410eabb48203544b932a4bb4320bc79e903918"
+      url: "https://github.com/IndigoCarmine/usbcan_plugins"
     source: git
     version: "0.0.2"
   vector_math:

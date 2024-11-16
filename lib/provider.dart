@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/usbcan_extends.dart';
-// import 'package:robomas_debuger/usbcan_extends.dart';
 import 'package:usbcan_plugins/frames.dart';
 import 'package:robomas_debuger/frame.dart';
-import 'package:usbcan_plugins/usbcan.dart';
 
 enum Mode {
   dis,
