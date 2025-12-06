@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:robomas_debuger/provider.dart';
+import 'package:robomas_debuger/frame.dart';
 import 'package:usbcan_plugins/frames.dart';
 
 class BasicTextField extends StatelessWidget {
@@ -43,21 +44,30 @@ class MoterKindButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final frame = ref.watch(robomasterParameterFrameProviders[motorIndex]);
+
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType,
+      value: frame.motorType,
       items: const [
         DropdownMenuItem(value: RobomasterMotorType.c610, child: Text('C610')),
         DropdownMenuItem(value: RobomasterMotorType.c620, child: Text('C620')),
       ],
       onChanged: (value) {
-        ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType = value!;
-        if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType == RobomasterMotorType.c620) {
-          if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 942 ||
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -942) {
-            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
-          }
+        if (value == null) return;
+
+        final newFrame = frame.copyWith(motorType: value);
+     
+        if (value == RobomasterMotorType.c620 &&
+            (frame.target > 942 || frame.target < -942)) {
+          newFrame.target = 0.0;
+        } else {
+          newFrame.target = frame.target;
         }
+
+        // state に新しいインスタンスを代入
+        ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state =
+            newFrame;
       },
     );
   }
@@ -69,47 +79,56 @@ class ModeButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final frame = ref.watch(robomasterParameterFrameProviders[motorIndex]);
+
     return DropdownButton(
       onTap: () => debugPrint(context.toString()),
-      value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode,
+      value: frame.motorMode,
       items: const [
         DropdownMenuItem(value: RobomasterMotorMode.dis, child: Text('dis')),
         DropdownMenuItem(value: RobomasterMotorMode.vel, child: Text('vel')),
         DropdownMenuItem(value: RobomasterMotorMode.pos, child: Text('pos'))
       ],
       onChanged: (value) {
-        ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode = value ?? RobomasterMotorMode.dis;
-        switch (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode)  {
+        if (value == null){
+          ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = frame.copyWith(motorMode: RobomasterMotorMode.dis);
+          return;
+        }
+        final newframe = frame.copyWith(motorMode: value);
+        switch (newframe.motorMode)  {
           case RobomasterMotorMode.dis:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
+            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe;
             break;
           case RobomasterMotorMode.vel:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
-            if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType == RobomasterMotorType.c620) {
-              if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 942 ||
-                  ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -942) {
-                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
+            if (frame.motorType == RobomasterMotorType.c620) {
+              if (frame.target > 942 || frame.target < -942) {
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe.copyWith(target: 0.0);
+              } else {
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe;
               }
             } else {
-              if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 1885 ||
-                  ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -1885) {
-                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
+              if (frame.target > 1885 || frame.target < -1885) {
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe.copyWith(target: 0.0);
+              } else {
+                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe;
               }
             }
             break;
           case RobomasterMotorMode.pos:
             ref.read(isOnProviders[motorIndex].notifier).state = false;
-            if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target >
+            if (frame.target >
                     double.parse(
                         ref.watch(maxtargetcontroller[motorIndex]).text) ||
-                ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target <
+                frame.target <
                     -1 *
                         double.parse(
                             ref.watch(maxtargetcontroller[motorIndex]).text)) {
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe.copyWith(target: 0.0);
+            } else {
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe;
             }
-            break;
-          default:
             break;
         }
       }
@@ -241,11 +260,17 @@ class TargetSendButton extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final frame = ref.watch(robomasterParameterFrameProviders[motorIndex]);
+
     return Switch(
         value: ref.watch(isOnProviders[motorIndex]),
         onChanged: (value) {
           ref.read(isOnProviders[motorIndex].notifier).state = value;
-          if (!value) return; //isOff. It should not send target.
+          if (!value) {
+            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state =
+                frame.copyWith(target: 0.0);
+            return; //isOff. It should not send target.
+          }
 
           switch (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorMode) {
             case RobomasterMotorMode.dis:
@@ -253,11 +278,6 @@ class TargetSendButton extends ConsumerWidget {
             case RobomasterMotorMode.vel:
             case RobomasterMotorMode.pos:
               robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.generateTargetFrame());
-              break;
-            default:
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                content: Text("Target Send Error"),
-              ));
               break;
           }
         });
@@ -282,59 +302,63 @@ class TargetSlider extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    switch (ref.watch(robomasterParameterFrameProviders[motorIndex]).motorMode) {
+    final frame = ref.watch(robomasterParameterFrameProviders[motorIndex]);
+    switch (frame.motorMode) {
       case RobomasterMotorMode.dis:
         return const Text('dis mode');
       case RobomasterMotorMode.vel:
-        if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.motorType == RobomasterMotorType.c620) {
-          if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target > 942 ||
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target < -942) {
-            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
-          }
+        if (frame.motorType == RobomasterMotorType.c620) {
           return Slider(
-            value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target,
+            value: frame.target,
             onChanged: (value) {
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = value;
+              RobomasterParameterFrame newframe;
+              if (frame.target > 942 || frame.target < -942) {
+                newframe = frame.copyWith(target: 0.0);
+              }else if(ref.read(isOnProviders[motorIndex])==false){
+                newframe = frame.copyWith(target: 0.0);
+              } else {
+                newframe = frame.copyWith(target: value);
+              }
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe;
               if (ref.read(isOnProviders[motorIndex])) {
-                robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state);
+                robomasUsb.sendFrame(newframe);
               }
             },
             min: -942,
             max: 942,
             divisions: 0x8000,
-            label: ref.watch(robomasterParameterFrameProviders[motorIndex]).toString(),
+            label: frame.target.toString(),
           );
         } else {
           return Slider(
-            value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target,
+            value: frame.target,
             onChanged: (value) {
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = value;
+              RobomasterParameterFrame newframe;
+              if (frame.target > 1885 || frame.target < -1885) {
+                newframe = frame.copyWith(target: 0.0);
+              }else if(ref.read(isOnProviders[motorIndex])==false){
+                newframe = frame.copyWith(target: 0.0);
+              } else {
+                newframe = frame.copyWith(target: value);
+              }
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = newframe;
               if (ref.read(isOnProviders[motorIndex])) {
-                robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state);
+                robomasUsb.sendFrame(newframe);
               }
             },
             min: -1885,
             max: 1885,
             divisions: 0x8000,
-            label: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target.toString(),
+            label: frame.target.toString(),
           );
         }
       case RobomasterMotorMode.pos:
-        // if(double.parse(ref.watch(targetcontroller).text)!=0.0){
-        if (ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target >
-                double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ||
-            ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target <
-                -1 *
-                    double.parse(
-                        ref.watch(maxtargetcontroller[motorIndex]).text)) {
-          ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
-        }
         if (double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) ==
-            0.0) {
+            0.0 || double.parse(ref.watch(maxtargetcontroller[motorIndex]).text) < 0) {
           ref.read(maxtargetcontroller[motorIndex]).text = '0.1';
         }
         return Slider(
-          value: ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state.target,
+          value: frame.target,
           onChanged: (value) {
             if (value >
                     double.parse(
@@ -342,21 +366,19 @@ class TargetSlider extends ConsumerWidget {
                 value <
                     -1 *
                         double.parse(
-                            ref.watch(maxtargetcontroller[motorIndex]).text)) {
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = 0.0;
+                            ref.watch(maxtargetcontroller[motorIndex]).text) ||
+                            ref.read(isOnProviders[motorIndex]) == false) {
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = frame.copyWith(target: 0.0);
             } else {
-              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state.target = value;
-              robomasUsb.sendFrame(ref.watch(robomasterParameterFrameProviders[motorIndex].notifier).state);
+              ref.read(robomasterParameterFrameProviders[motorIndex].notifier).state = frame.copyWith(target: value);
+              robomasUsb.sendFrame(frame.copyWith(target: value));
             }
           },
-          min: -1 *
-              double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
+          min: -1 * double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
           max: double.parse(ref.watch(maxtargetcontroller[motorIndex]).text),
           divisions: 0x8000,
-          label: ref.watch(robomasterParameterFrameProviders[motorIndex]).toString(),
+          label: frame.target.toString(),
         );
-      default:
-        return const Text('error');
     }
   }
 }
@@ -402,8 +424,6 @@ class TargetWidget extends ConsumerWidget {
             TargetSlider(motorIndex: motorIndex),
           ],
         );
-      default:
-        return const Text('error');
     }
   }
 }

@@ -58,4 +58,24 @@ class RobomasterParameterFrame implements Frame {
     }
     return data;
   }
+
+  RobomasterParameterFrame copyWith({
+    RobomasterMotorType? motorType,
+    RobomasterMotorMode? motorMode,
+    double? velkp,
+    double? velki,
+    double? poskp,
+    double? target,
+  }) {
+    final frame = RobomasterParameterFrame(
+      motorType ?? this.motorType,
+      motorMode ?? this.motorMode,
+      motorNumber,
+      velkp ?? this.velkp,
+      velki ?? this.velki,
+      poskp ?? this.poskp,
+    );
+    frame.target = target ?? this.target;
+    return frame;
+  }
 }
